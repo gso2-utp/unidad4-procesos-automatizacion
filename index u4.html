@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Unidad 4 | Procesos y Automatización | GSO II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#efe9d6; --sheet:#f8f4e6; --ink:#1d1f1b; --line:#1d1f1b; --soft:#d9d2b8;
+  --orange:#d9531e; --amber:#ffb21a; --phos:#6df08f; --crt:#0b140e; --bezel:#3b3e36;
+  --alarm:#e0452c; --mute:#5d5f53; --olive:#556248;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink);background:var(--paper);line-height:1.6;font-size:17px;
+  background-image:linear-gradient(rgba(29,31,27,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(29,31,27,.045) 1px,transparent 1px);background-size:24px 24px}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+code{background:var(--soft);padding:0 .35em;font-size:.86em;overflow-wrap:anywhere}
+h1,.stencil{font-family:"Saira Stencil One","Arial Black",sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.01em;line-height:1.02}
+h1{font-size:clamp(2.2rem,7.5vw,3.8rem)}
+h2{font-family:"Saira Condensed","Arial Narrow",sans-serif;font-weight:700;font-size:1.7rem;text-transform:uppercase;letter-spacing:.04em;line-height:1.1;margin:2rem 0 .9rem;padding-bottom:7px;position:relative;border-bottom:1.5px solid var(--line)}
+h2::after{content:"";position:absolute;left:0;right:0;bottom:-6px;border-bottom:1.5px solid var(--line)}
+h2 small{display:block;font:500 .72rem "IBM Plex Mono",monospace;color:var(--orange);letter-spacing:.12em;margin-bottom:2px}
+h3{font-family:"Saira Condensed",sans-serif;font-weight:700;font-size:1.2rem;text-transform:uppercase;letter-spacing:.05em;margin:1.2rem 0 .3rem}
+p{margin:.6rem 0}
+.ref{font-size:.86rem;color:var(--mute);overflow-wrap:anywhere}
+.lead{font-size:1.14rem;max-width:64ch}
+
+/* cabecera */
+.top{position:sticky;top:0;z-index:30;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:3px solid var(--orange)}
+.menu{display:none;font:600 .85rem "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;background:var(--amber);color:var(--ink);border:0;padding:6px 10px;cursor:pointer}
+.brand{font:400 1.05rem "Saira Stencil One",sans-serif;letter-spacing:.04em;color:var(--amber);white-space:nowrap}
+.crumb{flex:1;font:500 .8rem "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#cfc9b2}
+.clock{font:1.55rem/1 "VT323",monospace;color:var(--amber);letter-spacing:.06em;white-space:nowrap}
+.led{width:10px;height:10px;border-radius:50%;background:var(--phos);animation:blink 1.8s steps(2,jump-none) infinite}
+@keyframes blink{50%{opacity:.2}}
+.ticker{background:#14160f;color:var(--phos);font:1.15rem/1 "VT323",monospace;overflow:hidden;white-space:nowrap;border-bottom:1.5px solid #000}
+.ticker div{display:inline-block;padding:4px 0;animation:tick 55s linear infinite}
+@keyframes tick{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+
+/* estructura */
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;max-width:1200px;margin:0 auto}
+.rail{position:sticky;top:73px;align-self:start;height:calc(100vh - 73px);overflow:auto;padding:20px 16px 20px 18px;border-right:1.5px solid var(--line)}
+.rail h3{margin:0 0 12px;font:500 .72rem "IBM Plex Mono",monospace;letter-spacing:.14em;color:var(--orange)}
+.rail ol{list-style:none;position:relative;padding-left:22px}
+.rail ol::before{content:"";position:absolute;left:6px;top:8px;bottom:8px;border-left:1.5px dashed var(--ink)}
+.rail li{position:relative;margin-bottom:6px}
+.rail li::before{content:"";position:absolute;left:-22px;top:12px;width:11px;height:11px;border:1.5px solid var(--ink);background:var(--paper);border-radius:50%}
+.rail li.done::before{background:var(--phos)}
+.rail li.on::before{background:var(--orange);box-shadow:0 0 0 3px rgba(217,83,30,.25)}
+.rail a{display:block;padding:7px 8px;text-decoration:none;color:var(--ink);font-weight:600;line-height:1.25;border:1.5px solid transparent}
+.rail a:hover{border-color:var(--ink)}
+.rail li.on a{background:var(--ink);color:var(--paper)}
+.rail small{display:block;font:400 .72rem "IBM Plex Mono",monospace;color:var(--mute)}
+.rail li.on small{color:var(--amber)}
+.rail li.soon a{opacity:.5;cursor:default}
+.rail .prog{margin-top:18px;font:500 .72rem "IBM Plex Mono",monospace;color:var(--mute);letter-spacing:.06em}
+.rail .prog i{display:block;height:6px;border:1.5px solid var(--ink);margin-top:4px;position:relative}
+.rail .prog i b{position:absolute;inset:0 auto 0 0;background:var(--orange);width:25%}
+main{padding:22px 24px 80px;min-width:0}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35;display:none}
+.scrim.on{display:block}
+.view{display:none}.view.on{display:block;animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+
+/* hoja con marcas de registro */
+.sheet{position:relative;background:var(--sheet);border:1.5px solid var(--line);padding:22px 20px 16px;margin:24px 0}
+.sheet::before,.sheet::after{content:"";position:absolute;width:12px;height:12px;border:2px solid var(--orange)}
+.sheet::before{top:-6px;left:-6px;border-right:0;border-bottom:0}
+.sheet::after{bottom:-6px;right:-6px;border-left:0;border-top:0}
+.fig{position:absolute;top:-10px;right:14px;background:var(--paper);padding:0 8px;font:500 .72rem "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--orange)}
+.sheet.alarm{border-color:var(--alarm);background:#f6e3dc}
+.sheet.alarm .fig{color:var(--alarm)}
+.sheet.class{border-style:dashed;border-width:2px}
+.banner{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--paper);padding:12px 14px;margin:14px 0}
+.banner b{font:600 .78rem "IBM Plex Mono",monospace;letter-spacing:.1em;background:var(--amber);color:var(--ink);padding:2px 8px;white-space:nowrap}
+.banner span{font-size:.95rem}
+
+/* tablas */
+.tw{overflow-x:auto;margin:12px 0;border:1.5px solid var(--line);background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th{background:var(--ink);color:var(--amber);font:500 .74rem "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.1em;text-align:left;padding:7px 10px}
+td{padding:7px 10px;border-top:1px solid var(--soft);vertical-align:top}
+td:first-child{white-space:nowrap}
+
+/* botones y pestanas */
+.btn{font:600 .8rem "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.08em;background:var(--sheet);color:var(--ink);border:1.5px solid var(--ink);padding:8px 14px;cursor:pointer}
+.btn:hover{background:var(--amber)}
+.btn.go{background:var(--ink);color:var(--amber)}
+.btn.go:hover{background:var(--orange);color:#fff}
+.tabs{display:flex;gap:0;margin:18px 0 0;border:1.5px solid var(--line);background:var(--sheet);overflow-x:auto}
+.tabs button{flex:1;min-width:max-content;font:600 .74rem "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;padding:11px 14px;border:0;border-right:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left}
+.tabs button:last-child{border-right:0}
+.tabs button i{display:block;font-style:normal;color:var(--orange);font-size:.65rem}
+.tabs button.on{background:var(--ink);color:var(--paper)}
+.tabs button.on i{color:var(--amber)}
+.pane{display:none;padding-top:6px}.pane.on{display:block;animation:fade .25s}
+.next{margin-top:22px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* portada */
+.hero{position:relative;background:var(--bezel);padding:12px;border-radius:14px;border:1.5px solid #000;box-shadow:inset 0 0 0 3px #55584d}
+.hero .scr{position:relative;overflow:hidden;background:var(--crt);color:var(--paper);border-radius:6px;min-height:400px;padding:26px 22px}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%}
+.hero .in{position:relative;z-index:2;max-width:540px}
+.hero h1{margin:12px 0 10px;color:var(--paper)}
+.hero h1 span{color:var(--amber)}
+.hero .tag{font:1.45rem/1.1 "VT323",monospace;color:var(--phos);letter-spacing:.05em}
+.hero .tag::after{content:"_";animation:blink 1s steps(2,jump-none) infinite}
+.hero p{color:#d8d4bf;max-width:46ch}
+.planet{position:absolute;right:-26px;top:24px;width:min(52%,320px);z-index:1}
+.patch{width:96px;height:96px;position:relative;z-index:2}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.stats span{font:1.15rem "VT323",monospace;color:var(--phos);border:1.5px solid var(--phos);padding:0 8px;background:rgba(0,0,0,.35)}
+.led-row{display:flex;gap:8px;margin-top:10px;padding-left:4px}
+.led-row i{width:9px;height:9px;border-radius:50%;background:var(--phos);animation:blink 2.2s steps(2,jump-none) infinite}
+.led-row i:nth-child(2){background:var(--amber);animation-delay:.5s}.led-row i:nth-child(3){background:var(--alarm);animation-delay:1.1s;opacity:.35;animation:none}
+
+/* plan de vuelo (portada) */
+.plan{list-style:none;position:relative;margin:10px 0 0;padding-left:34px}
+.plan::before{content:"";position:absolute;left:11px;top:14px;bottom:14px;border-left:2px dashed var(--ink)}
+.plan li{position:relative;margin:0 0 14px}
+.plan li::before{content:"";position:absolute;left:-30px;top:16px;width:16px;height:16px;border-radius:50%;border:2px solid var(--ink);background:var(--paper)}
+.plan li.go::before{background:var(--phos)}
+.plan button,.plan div.row{display:grid;grid-template-columns:78px 1fr;gap:4px 14px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--sheet);border:1.5px solid var(--ink);padding:10px 14px;cursor:pointer}
+.plan div.row{cursor:default;opacity:.6}
+.plan button:hover{background:var(--amber)}
+.plan .t{font:600 .78rem "IBM Plex Mono",monospace;color:var(--orange);letter-spacing:.08em;padding-top:3px}
+.plan b{font:700 1.15rem "Saira Condensed",sans-serif;text-transform:uppercase;letter-spacing:.05em}
+.plan small{display:block;color:var(--mute);font-size:.88rem;line-height:1.35}
+
+/* comandos */
+details{border:1.5px solid var(--line);background:var(--sheet);margin:10px 0}
+summary{cursor:pointer;padding:11px 14px;font-weight:600;list-style:none;min-width:0}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"\25B8";display:inline-block;margin-right:8px;color:var(--orange);transition:transform .15s}
+details[open] summary::before{transform:rotate(90deg)}
+details[open] summary{background:var(--soft);border-bottom:1.5px solid var(--line)}
+details .in{padding:6px 16px 14px}
+.real{border-left:4px solid var(--olive);padding:2px 0 2px 12px;margin:10px 0}
+.real b,.mis b{display:block;font:500 .72rem "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase}
+.real b{color:var(--olive)}
+.mis{border-left:4px solid var(--orange);padding:2px 0 2px 12px;margin:10px 0}.mis b{color:var(--orange)}
+pre{background:var(--crt);color:var(--phos);padding:12px 14px;overflow-x:auto;font-size:.86rem;line-height:1.5;margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:3px}
+pre .c{color:#b7e8c3}
+
+/* simulador */
+.how{counter-reset:s;list-style:none;margin:10px 0}
+.how li{counter-increment:s;position:relative;padding:6px 0 6px 40px}
+.how li::before{content:counter(s);position:absolute;left:0;top:5px;width:28px;height:28px;border:1.5px solid var(--ink);background:var(--amber);font:700 .95rem "IBM Plex Mono",monospace;display:flex;align-items:center;justify-content:center}
+.seg{display:flex;gap:0;margin:8px 0 12px}
+.seg button{font:600 .76rem "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 14px;border:1.5px solid var(--ink);background:var(--sheet);cursor:pointer}
+.seg button+button{border-left:0}
+.seg button.on{background:var(--ink);color:var(--amber)}
+.mon{overflow:hidden;background:var(--bezel);padding:10px;border-radius:12px;border:1.5px solid #000;box-shadow:inset 0 0 0 3px #55584d;margin:14px 0;position:relative}
+.scr2{position:relative;background:var(--crt);color:var(--phos);font-family:"VT323",monospace;border-radius:5px;overflow:hidden}
+.scr2::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.scr2 .hd{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2px 14px;padding:5px 12px;border-bottom:1.5px solid var(--phos);font-size:1.2rem;color:var(--amber)}
+.rows{padding:4px 6px;overflow-x:auto}
+.crow{display:grid;grid-template-columns:50px 96px 1fr 56px 44px 150px;gap:8px;align-items:center;padding:3px 4px;font-size:1.2rem;min-width:640px;border-bottom:1px dashed rgba(109,240,143,.22)}
+.crow.h{color:var(--amber);border-bottom:1.5px solid var(--phos)}
+.crow.hot{color:#ff7a62;background:rgba(224,69,44,.14)}
+.bar{height:11px;background:rgba(109,240,143,.14);border:1px solid var(--phos);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--phos);transition:width .5s}
+.crow.hot .bar i{background:var(--alarm)}
+.sig{display:flex;gap:6px}
+.sig button{font:1.05rem "VT323",monospace;background:transparent;color:var(--phos);border:1.5px solid var(--phos);padding:0 7px;cursor:pointer}
+.sig button.k{border-color:var(--alarm);color:#ff7a62}
+.sig button:hover{background:var(--phos);color:var(--crt)}.sig button.k:hover{background:var(--alarm);color:#fff}
+.term{border-top:1.5px solid var(--phos);padding:6px 12px 8px}
+.tl{max-height:230px;overflow:auto;font-size:1.2rem;line-height:1.15;padding-bottom:4px}
+.tl div{white-space:pre-wrap;overflow-wrap:anywhere}
+.tl .n{color:var(--amber)}
+.tl .e{color:#ff7a62}
+.pl{display:flex;gap:8px;font-size:1.3rem;align-items:center;border-top:1px dashed rgba(109,240,143,.3);padding-top:6px}
+.pl .x{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--phos);font:inherit;caret-color:var(--phos)}
+.stamp{display:none;position:absolute;right:14px;top:58px;max-width:calc(100% - 28px);z-index:3;transform:rotate(-8deg);border:3px solid var(--phos);color:var(--phos);padding:0 12px;font:1.9rem "VT323",monospace;background:rgba(11,20,14,.9)}
+.stamp.on{display:block;animation:pop .35s}
+@keyframes pop{from{transform:rotate(-8deg) scale(1.8);opacity:0}}
+.debrief{display:none}.debrief.on{display:block}
+
+/* lista de verificacion */
+.check{background:var(--sheet);border:1.5px solid var(--line);padding:6px 14px;position:relative;overflow:hidden}
+.chk{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px dashed var(--mute);cursor:pointer}
+.chk:last-of-type{border-bottom:0}
+.chk input{width:21px;height:21px;accent-color:var(--olive);flex:none;margin-top:3px}
+.chk.done>span>b{text-decoration:line-through;color:var(--mute)}
+.chk code{display:inline-block;max-width:100%}
+.go-stamp{display:none;position:absolute;right:16px;top:8px;transform:rotate(7deg);border:3px solid var(--olive);color:var(--olive);font:400 1.5rem "Saira Stencil One",sans-serif;padding:0 12px;letter-spacing:.08em;background:var(--sheet)}
+.go-stamp.on{display:block;animation:pop .35s}
+
+.ficha{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));border:1.5px solid var(--line);background:var(--sheet)}
+.ficha div{padding:9px 12px;border-right:1px solid var(--soft);border-bottom:1px solid var(--soft);font-size:.92rem}
+.ficha b{display:block;font:500 .68rem "IBM Plex Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--orange)}
+
+@media (max-width:899px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:fixed;z-index:40;left:0;top:0;bottom:0;height:auto;width:min(310px,88vw);background:var(--paper);transform:translateX(-105%);transition:transform .25s;border-right:3px solid var(--ink);padding-top:24px}
+  .rail.open{transform:none}
+  .menu{display:block}
+  main{padding:16px 14px 70px}
+}
+@media (max-width:560px){body{font-size:16px}.planet{opacity:.45;right:-70px;top:60px}.clock{font-size:1.3rem}.brand{display:none}.hero .scr{padding:18px 14px}.plan button,.plan div.row{grid-template-columns:1fr}.tabs button{padding:9px 10px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ===== piezas nuevas ===== */
+.codebox{background:var(--crt);color:var(--phos);border-radius:3px;margin:10px 0;overflow:hidden}
+.codebox .ln{display:grid;grid-template-columns:34px 1fr;font:.86rem/1.55 "IBM Plex Mono",monospace;padding:0 10px 0 0;border-left:4px solid transparent}
+.codebox .ln i{font-style:normal;color:#5f8a6b;text-align:right;padding-right:10px;user-select:none}
+.codebox .ln span{white-space:pre-wrap;overflow-wrap:anywhere}
+.codebox .ln.on{background:rgba(255,178,26,.16);border-left-color:var(--amber);color:#fff}
+.vars{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.vars div{border:1.5px solid var(--line);background:var(--sheet);padding:6px 10px;font:.86rem "IBM Plex Mono",monospace}
+.vars b{display:block;font:500 .66rem "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--orange);text-transform:uppercase}
+.vars .chg{background:var(--amber)}
+.out{background:#000;color:var(--phos);font:.86rem/1.5 "IBM Plex Mono",monospace;padding:8px 12px;min-height:3.2em;border-radius:3px;white-space:pre-wrap}
+.note2{border-left:4px solid var(--orange);padding:4px 0 4px 12px;margin:10px 0;background:var(--sheet)}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;font:inherit;background:var(--sheet);border:1.5px solid var(--ink);padding:9px 12px;cursor:pointer}
+.opt:hover{background:var(--amber)}
+.opt.ok{background:#cfe8c9;border-color:var(--olive)}
+.opt.no{background:#f3c9bd;border-color:var(--alarm)}
+.fb{display:none;margin-top:8px;padding:8px 12px;border-left:4px solid var(--olive);background:var(--sheet)}
+.fb.on{display:block}
+.cb{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:10px 0}
+.cb label{display:block;font:500 .68rem "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
+.cb input{width:100%;font:600 1.1rem "IBM Plex Mono",monospace;padding:8px 6px;border:1.5px solid var(--ink);background:var(--sheet);text-align:center}
+.cb small{display:block;font:.7rem "IBM Plex Mono",monospace;color:var(--mute)}
+.cline{font:600 1.05rem "IBM Plex Mono",monospace;background:var(--crt);color:var(--phos);padding:10px 14px;overflow-wrap:anywhere;border-radius:3px}
+.bad{color:var(--alarm);font-weight:600}
+.runs{list-style:none;margin:6px 0;font:.9rem "IBM Plex Mono",monospace}
+.runs li{padding:2px 0;border-bottom:1px dashed var(--soft)}
+.ctf{border:2px solid var(--ink);background:var(--sheet);padding:14px 16px;margin:18px 0;position:relative}
+.ctf.solved{border-color:var(--olive);background:#e6efd9}
+.ctf h3{margin-top:0}
+.ctf input[type=text]{font:500 1rem "IBM Plex Mono",monospace;padding:7px 9px;border:1.5px solid var(--ink);background:#fff;width:min(100%,260px);margin:4px 8px 4px 0}
+.ctf .msg{margin-top:6px;font-weight:600}
+.tl2{display:grid;gap:12px;margin:12px 0}
+.unit{display:grid;grid-template-columns:70px 1fr;gap:12px;border:1.5px solid var(--ink);background:var(--sheet);padding:12px 14px;position:relative}
+.unit .n{font:400 2.4rem/1 "Saira Stencil One",sans-serif;color:var(--orange)}
+.unit ul{margin:4px 0 0 18px;font-size:.92rem}
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.badges span{border:2px dashed var(--mute);padding:6px 12px;font:600 .8rem "IBM Plex Mono",monospace;color:var(--mute);letter-spacing:.06em}
+.badges span.on{border:2px solid var(--olive);color:var(--olive);background:#e6efd9}
+.refs li{margin:8px 0 8px 18px;font-size:.92rem;overflow-wrap:anywhere}
+.refs a{color:var(--orange)}
+@media (max-width:560px){.cb{grid-template-columns:repeat(2,minmax(0,1fr))}.unit{grid-template-columns:1fr}}
+/* ===== ambientacion de mision ===== */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(circle,rgba(29,31,27,.18) 1px,transparent 1.5px),radial-gradient(circle,rgba(217,83,30,.16) 1.5px,transparent 2px);background-size:90px 90px,170px 170px;background-position:10px 20px,60px 70px}
+.scene{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:center;background:var(--bezel);border:1.5px solid #000;border-radius:12px;padding:10px;box-shadow:inset 0 0 0 3px #55584d;margin:18px 0 8px}
+.scene .scr3{position:relative;background:var(--crt);border-radius:6px;padding:8px;display:flex;justify-content:center;overflow:hidden}
+.scene .scr3::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+.scene svg{width:100%;max-width:180px;height:auto;display:block}
+.scene .rd{font:1.25rem/1.25 "VT323",monospace;color:var(--phos);padding:4px 8px 4px 0}
+.scene .rd div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed rgba(109,240,143,.3);padding:1px 0}
+.scene .rd b{font-weight:400;color:var(--amber)}
+.scene .rd .tt{color:var(--paper);font-size:1.5rem;border:0;letter-spacing:.06em}
+.strip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ink);color:var(--paper);padding:6px 12px;margin:14px 0 4px;font:500 .74rem "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase}
+.strip i{width:8px;height:8px;border-radius:50%;background:var(--phos);animation:blink 1.8s steps(2,jump-none) infinite;flex:none}
+.strip b{color:var(--amber);font-weight:500}
+.strip span:last-child{margin-left:auto;color:#a9a58f}
+.sweep{transform-origin:90px 90px;animation:spin 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hand{transform-origin:90px 90px;animation:spin 12s linear infinite}
+.flame{animation:blink .5s steps(2,jump-none) infinite}
+@media (max-width:560px){.scene{grid-template-columns:1fr}.strip span:last-child{margin-left:0}}
+
+.concept{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:22px;align-items:start;margin:14px 0}
+.concept>.ct>*:first-child{margin-top:0}
+.ill{background:var(--crt);border:1.5px solid var(--line);border-radius:4px;padding:6px 8px 8px;margin:0;position:relative}
+.ill svg{width:100%;height:auto;display:block}
+.ill figcaption{font:.72rem/1.4 "IBM Plex Mono",monospace;color:#b7e8c3;border-top:1px dashed rgba(109,240,143,.35);margin-top:6px;padding-top:6px}
+.details-ill{margin:8px 0}
+@media (max-width:860px){.concept{grid-template-columns:1fr}.ill{max-width:360px}}
+td code{white-space:nowrap;overflow-wrap:normal}
+.in>.ill{float:right;width:270px;margin:4px 0 10px 20px}
+.in::after{content:"";display:block;clear:both}
+.shellfig{max-width:420px}
+@media (max-width:760px){.in>.ill{float:none;width:100%;max-width:340px;margin:10px 0}}
+
+.real>b:first-child,.mis>b:first-child{display:block}
+.real b:not(:first-child),.mis b:not(:first-child){display:inline;font:inherit;letter-spacing:0;text-transform:none;color:inherit}
+</style>
+</head>
+<body>
+<div class="scrim" id="scrim"></div>
+<header class="top">
+  <button class="menu" id="menuBtn" aria-controls="rail">Plan</button>
+  <span class="brand">GSO II · U4</span>
+  <span class="led" aria-hidden="true"></span>
+  <span class="crumb" id="crumb">Sala de control</span>
+  <span class="clock" id="clock" title="Tiempo de misión">T+ 00:00:00</span>
+</header>
+<div class="ticker" aria-hidden="true"><div>&gt;&gt; TELEMETRÍA NOMINAL &nbsp;&nbsp;//&nbsp;&nbsp; CONTROL A TODAS LAS ESTACIONES: INICIA LA FASE DE OPERACIONES &nbsp;&nbsp;//&nbsp;&nbsp; RECUERDE: PRIMERO SIGTERM, DESPUÉS SIGKILL &nbsp;&nbsp;//&nbsp;&nbsp; UN SCRIPT SIN PROBAR NO ES UN PROCEDIMIENTO &nbsp;&nbsp;//&nbsp;&nbsp; EL CRON NO PERDONA LAS RUTAS RELATIVAS &nbsp;&nbsp;//&nbsp;&nbsp; GO / NO-GO PARA LA SIGUIENTE FASE</div></div>
+
+<div class="shell">
+<nav class="rail" id="rail" aria-label="Plan de vuelo">
+  <h3>PLAN DE VUELO</h3>
+  <ol>
+    <li data-li="home"><a href="#" data-v="home">Sala de control<small>T-00 · Inicio</small></a></li>
+    <li data-li="proc"><a href="#" data-v="proc">4.1 Procesos<small>w · ps · top · kill</small></a></li>
+    <li data-li="shell"><a href="#" data-v="shell">4.2 Shell y Bash<small>Scripts</small></a></li>
+    <li data-li="cron"><a href="#" data-v="cron">4.2.3 Crontab<small>Tareas automáticas</small></a></li>
+    <li data-li="bit"><a href="#" data-v="bit">Bitácora de misión<small>Cierre</small></a></li>
+  </ol>
+  <div class="prog">PROGRESO DE LA MISIÓN<i><b id="prog"></b></i></div>
+</nav>
+<main>
+<!-- PORTADA -->
+<section class="view on" id="v-home">
+  <div class="hero"><div class="scr">
+    <canvas id="stars" aria-hidden="true"></canvas>
+    <svg class="planet" viewBox="0 0 320 320" aria-hidden="true">
+      <ellipse cx="160" cy="165" rx="150" ry="38" fill="none" stroke="#6df08f" stroke-width="2" stroke-dasharray="4 7" transform="rotate(-18 160 165)"/>
+      <circle cx="160" cy="160" r="86" fill="#d9531e" stroke="#1d1f1b" stroke-width="4"/>
+      <path d="M82 138c50 16 106 16 156 0M76 172c56 18 112 18 168 0M92 204c44 10 92 10 136 0" fill="none" stroke="#a83d14" stroke-width="10" stroke-linecap="round"/>
+      <circle cx="132" cy="120" r="12" fill="#a83d14"/><circle cx="196" cy="198" r="9" fill="#a83d14"/>
+      <g transform="rotate(-18 160 165)"><g>
+        <animateMotion dur="14s" repeatCount="indefinite" path="M310 165a150 38 0 1 0 -300 0a150 38 0 1 0 300 0"/>
+        <rect x="-9" y="-6" width="18" height="12" fill="#f4efde" stroke="#1d1f1b" stroke-width="3"/>
+        <rect x="-17" y="-2" width="8" height="4" fill="#ffb21a" stroke="#1d1f1b" stroke-width="2"/>
+        <rect x="9" y="-2" width="8" height="4" fill="#ffb21a" stroke="#1d1f1b" stroke-width="2"/>
+      </g></g>
+    </svg>
+    <div class="in">
+      <svg class="patch" viewBox="0 0 120 120" role="img" aria-label="Parche de la misión">
+        <circle cx="60" cy="60" r="56" fill="#f4efde" stroke="#1d1f1b" stroke-width="4"/>
+        <circle cx="60" cy="60" r="44" fill="#272a22" stroke="#ffb21a" stroke-width="3"/>
+        <circle cx="60" cy="66" r="15" fill="#d9531e" stroke="#f4efde" stroke-width="2"/>
+        <ellipse cx="60" cy="66" rx="31" ry="8" fill="none" stroke="#6df08f" stroke-width="2" transform="rotate(-20 60 66)"/>
+        <path d="M60 22l3.5 8 8.5.8-6.4 5.6 1.9 8.4-7.5-4.5-7.5 4.5 1.9-8.4-6.4-5.6 8.5-.8z" fill="#ffb21a"/>
+      </svg>
+      <p class="tag" style="margin-top:10px">GSO II / UNIDAD 4 / MISIÓN FINAL</p>
+      <h1>Sala de <span>control</span></h1>
+      <p>Los servicios ya están en órbita. Ahora toca operarlos: vigilar cada proceso, apagar el que se desboca y dejar listas las secuencias que se ejecutan solas.</p>
+      <div class="stats"><span>FASES 3</span><span>ESTADO: NOMINAL</span></div>
+    </div>
+  </div><div class="led-row"><i></i><i></i><i></i></div></div>
+
+  <h2><small>PLAN DE VUELO</small>Fases de la misión</h2>
+  <ol class="plan">
+    <li class="go"><button data-go="proc"><span class="t">T-04 · FASE 1</span><span><b>4.1 Procesos</b><small>Ver qué corre en el servidor y apagar lo que se desboca: <code>w</code>, <code>ps</code>, <code>top</code> y <code>kill</code>.</small></span></button></li>
+    <li class="go"><button data-go="shell"><span class="t">T-03 · FASE 2</span><span><b>4.2 Shell y Bash</b><small>Qué es un shell y cómo escribir scripts con variables, condicionales y ciclos.</small></span></button></li>
+    <li class="go"><button data-go="cron"><span class="t">T-02 · FASE 3</span><span><b>4.2.3 Crontab</b><small>Programar tareas que se ejecutan solas, con su horario.</small></span></button></li>
+    <li class="go"><button data-go="bit"><span class="t">T-01 · CIERRE</span><span><b>Bitácora de misión</b><small>El recorrido completo del curso, unidad por unidad.</small></span></button></li>
+  </ol>
+  <p class="ref">Material de estudio de la Unidad 4. Los ejemplos de salida son ilustrativos: los valores de tu servidor serán distintos.</p>
+</section>
+
+<!-- 4.1 PROCESOS -->
+<section class="view" id="v-proc">
+  <p class="mono ref" style="letter-spacing:.12em;color:var(--orange)">FASE 1 · 4.1 · PROCESOS</p>
+  <h1 style="margin-top:6px">Telemetría de procesos</h1>
+  <p class="lead">Cada programa que se ejecuta en el servidor es un proceso. Un buen administrador sabe ver cuáles están activos, detectar el que se comporta de forma anómala y finalizarlo sin dañar al resto.</p>
+  <div class="scene" aria-hidden="true"><div class="scr3"><svg viewBox="0 0 180 180" aria-hidden="true"><g fill="none" stroke="#6df08f" stroke-width="1.2"><circle cx="90" cy="90" r="80"/><circle cx="90" cy="90" r="55"/><circle cx="90" cy="90" r="30"/><path d="M90 10v160M10 90h160" stroke-dasharray="3 5"/></g><g class="sweep"><path d="M90 90L90 10A80 80 0 0 1 147 33Z" fill="rgba(109,240,143,.28)"/><path d="M90 90L90 10" stroke="#6df08f" stroke-width="2"/></g><circle cx="122" cy="58" r="4" fill="#e0452c"/><circle cx="62" cy="112" r="3" fill="#6df08f"/><circle cx="108" cy="124" r="3" fill="#6df08f"/><circle cx="70" cy="60" r="3" fill="#6df08f"/></svg></div><div class="rd"><div class="tt">T-04 · FASE 1</div><div><span>SISTEMA</span><b>PROCESOS</b></div><div><span>INSTRUMENTO</span><b>RADAR</b></div><div><span>OBJETIVO</span><b>DETECTAR ANOMALÍAS</b></div><div><span>ESTADO</span><b>NOMINAL</b></div></div></div>
+  <div class="tabs" role="tablist">
+    <button class="on" data-t="a"><i>PASO 1</i>Briefing</button>
+    <button data-t="b"><i>PASO 2</i>Comandos</button>
+    <button data-t="c"><i>PASO 3</i>Radar</button>
+    <button data-t="d"><i>PASO 4</i>Práctica</button>
+    <button data-t="e"><i>PASO 5</i>Ficha y reto</button>
+  </div>
+
+  <div class="pane on" data-p="a">
+    <div class="sheet"><span class="fig">FIG. 4.1-A</span>
+      <h3 style="margin-top:0">Los cuatro comandos, en lenguaje real y en lenguaje de misión</h3>
+      <div class="tw"><table>
+        <tr><th>Comando</th><th>Qué hace en el servidor</th><th>En la sala de control</th></tr>
+        <tr><td><code>w</code></td><td>Muestra quién está conectado, qué está ejecutando y cuánta carga tiene el sistema.</td><td>La lista de la tripulación a bordo</td></tr>
+        <tr><td><code>ps</code></td><td>Una foto de los procesos en un instante: PID, usuario, consumo y estado.</td><td>Una foto fija de los instrumentos: lo que marcaban justo al pedirla</td></tr>
+        <tr><td><code>top</code></td><td>Una vista en vivo de los procesos, ordenada por consumo de CPU.</td><td>Los instrumentos en vivo: se actualizan solos</td></tr>
+        <tr><td><code>kill</code></td><td>Envía una señal a un proceso. Por defecto le pide que termine; con otra señal puede forzarlo.</td><td>La orden de control: apagado ordenado o corte forzado</td></tr>
+      </table></div>
+      <p class="ref">Cada proceso tiene un <b>PID</b>, un número único que lo identifica, como un indicativo de llamada. Casi todo lo que haces con procesos empieza por encontrar su PID.</p>
+    </div>
+    <h2><small>ORGANIGRAMA · ÁRBOL DE PROCESOS</small>Quién cuelga de quién</h2><div class="concept"><div class="ct"><p style="margin-top:0">Cada proceso nace de otro. El primero, <b>PID 1</b> (<code>systemd</code>), es el control central: de él cuelgan los módulos de la nave. Cada módulo es un servicio con su PID: <code>sshd</code> son las comunicaciones, <code>chronyd</code> el reloj, <code>crond</code> el planificador y <code>httpd</code> la antena web.</p><p>Matar un proceso equivocado es como apagar un módulo vital. Por eso se identifica primero el PID y el nombre.</p><div class="mis"><b>En la sala de control</b>El PID es el indicativo de llamada de cada módulo.</div></div><figure class="ill"><svg viewBox="0 0 300 232" role="img" aria-label="Árbol de procesos como organigrama de la nave"><defs><marker id="arf1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><rect x="85" y="6" width="130" height="40" rx="3" fill="none" stroke="#ffb21a" stroke-width="1.5"/><text x="150" y="23" fill="#ffb21a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">PID 1 · systemd</text><text x="150" y="38" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Control central</text><line x1="150" y1="46" x2="150" y2="60" stroke="#6df08f" stroke-width="1.5"/><line x1="150" y1="60" x2="150" y2="146" stroke="#6df08f" stroke-width="1.5"/><line x1="150" y1="92" x2="140" y2="92" stroke="#6df08f" stroke-width="1.5"/><line x1="150" y1="92" x2="160" y2="92" stroke="#6df08f" stroke-width="1.5"/><rect x="10" y="73" width="130" height="38" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="75" y="89" fill="#6df08f" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">PID 812 · sshd</text><text x="75" y="103" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Comunicaciones</text><rect x="160" y="73" width="130" height="38" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="225" y="89" fill="#6df08f" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">PID 955 · chronyd</text><text x="225" y="103" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Reloj de misión</text><rect x="10" y="127" width="130" height="38" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="75" y="143" fill="#6df08f" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">PID 1104 · crond</text><text x="75" y="157" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Planificador</text><rect x="160" y="127" width="130" height="38" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="225" y="143" fill="#6df08f" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">PID 1420 · httpd</text><text x="225" y="157" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Antena web</text><line x1="150" y1="146" x2="140" y2="146" stroke="#6df08f" stroke-width="1.5"/><line x1="150" y1="146" x2="160" y2="146" stroke="#6df08f" stroke-width="1.5"/><rect x="60" y="182" width="180" height="40" rx="3" fill="none" stroke="#e0452c" stroke-width="1.5" stroke-dasharray="4 3"/><text x="150" y="199" fill="#e0452c" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">Z · [worker] defunct</text><text x="150" y="213" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Módulo ya desacoplado</text><line x1="150" y1="146" x2="150" y2="182" stroke="#e0452c" stroke-width="1.5" stroke-dasharray="4 3"/></svg><figcaption>Todo proceso cuelga de otro. El PID 1 es el control central. En rojo, el zombi: ya terminó, pero su padre aún no registró su cierre.</figcaption></figure></div><h2><small>TELEMETRÍA · CONCEPTOS</small>Antes de tocar nada</h2>
+    <div class="tw"><table>
+      <tr><th>Término</th><th>Qué significa</th></tr>
+      <tr><td><b>Proceso</b></td><td>Un programa en ejecución. El mismo programa puede tener varios procesos a la vez.</td></tr>
+      <tr><td><b>PID</b></td><td>Identificador numérico del proceso. Cambia cada vez que el programa se inicia.</td></tr>
+      <tr><td><b>PID 1</b></td><td>El primer proceso que arranca el sistema (<code>systemd</code>). De él cuelgan todos los demás.</td></tr>
+      <tr><td><b>Señal</b></td><td>Un mensaje que el sistema o un usuario envía a un proceso: "termina", "pausa", "recarga tu configuración".</td></tr>
+      <tr><td><b>Carga (load average)</b></td><td>Promedio de procesos esperando CPU en el último 1, 5 y 15 minutos.</td></tr>
+      <tr><td><b>Zombi</b></td><td>Proceso que ya terminó, pero cuyo padre aún no recogió su estado. No consume CPU.</td></tr>
+    </table></div>
+    <div class="sheet alarm"><span class="fig">POR QUÉ IMPORTA</span>
+      <p style="margin-top:0">Un proceso desbocado puede consumir toda la CPU y dejar sin respuesta a los servicios que sí importan. Saber encontrarlo y finalizarlo es una tarea básica de disponibilidad, y también de seguridad: un proceso inesperado con nombre sospechoso puede ser el rastro de una intrusión.</p>
+    </div>
+    <div class="next"><span></span><button class="btn go" data-nx="b">Siguiente: comandos</button></div>
+  </div>
+
+  <div class="pane" data-p="b">
+    <div class="banner"><b>COMANDOS</b><span>Cada comando trae su función, un ejemplo de lo que verás al ejecutarlo y, abajo, qué hace en la sala de control. Pruébalos por tu cuenta en tu servidor Fedora.</span></div>
+    <details open><summary><code>w</code></summary><div class="in">
+      <div class="real"><b>Función real</b>Muestra los usuarios conectados al servidor y lo que ejecuta cada uno. La primera línea trae la hora, el tiempo encendido y la carga promedio de 1, 5 y 15 minutos.</div>
+      <div class="mis"><b>En la sala de control</b>La lista de la tripulación a bordo.</div>
+      <figure class="ill"><svg viewBox="0 0 300 120" role="img" aria-label="Tres medidores de carga"><defs><marker id="arf4" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><path d="M14 80 A36 36 0 0 1 86 80" fill="none" stroke="#6df08f" stroke-width="2"/><path d="M14 80 A36 36 0 0 1 86 80" fill="none" stroke="#e0452c" stroke-width="6" stroke-dasharray="1 0" opacity=".0"/><line x1="50" y1="80" x2="20.2" y2="68.2" stroke="#ffb21a" stroke-width="2.5"/><circle cx="50" cy="80" r="4" fill="#ffb21a"/><text x="50" y="98" fill="#f4efde" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">1 min</text><path d="M114 80 A36 36 0 0 1 186 80" fill="none" stroke="#6df08f" stroke-width="2"/><path d="M114 80 A36 36 0 0 1 186 80" fill="none" stroke="#e0452c" stroke-width="6" stroke-dasharray="1 0" opacity=".0"/><line x1="150" y1="80" x2="119.0" y2="72.0" stroke="#ffb21a" stroke-width="2.5"/><circle cx="150" cy="80" r="4" fill="#ffb21a"/><text x="150" y="98" fill="#f4efde" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">5 min</text><path d="M214 80 A36 36 0 0 1 286 80" fill="none" stroke="#6df08f" stroke-width="2"/><path d="M214 80 A36 36 0 0 1 286 80" fill="none" stroke="#e0452c" stroke-width="6" stroke-dasharray="1 0" opacity=".0"/><line x1="250" y1="80" x2="218.3" y2="76.0" stroke="#ffb21a" stroke-width="2.5"/><circle cx="250" cy="80" r="4" fill="#ffb21a"/><text x="250" y="98" fill="#f4efde" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">15 min</text><text x="150" y="18" fill="#ffb21a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">carga del sistema (load average)</text><text x="150" y="112" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">aguja a la izquierda: la nave va holgada</text></svg><figcaption>La primera línea de w trae tres medidores: carga promedio del último 1, 5 y 15 minutos. Si las agujas suben y se quedan arriba, algo consume de más.</figcaption></figure>
+      <pre>$ w
+<span class="c"> 20:04:11 up 3 days, 2:10,  2 users,  load average: 0.15, 0.10, 0.05
+USER     TTY      FROM            LOGIN@   IDLE   WHAT
+ana      pts/0    192.168.60.10   18:02    1.00s  w</span></pre>
+      <p class="ref">Datos ilustrativos: los tuyos serán distintos. Una carga alta y sostenida es la primera pista de que algo consume de más.</p>
+    </div></details>
+    <details><summary><code>ps aux</code> y <code>ps aux --sort=-%cpu | head</code></summary><div class="in">
+      <div class="real"><b>Función real</b>Toma una foto de todos los procesos del sistema en ese instante. Con <code>--sort=-%cpu</code> los ordena del que más CPU usa al que menos, y <code>head</code> deja solo los diez primeros. Para buscar uno por nombre se combina con <code>grep</code>: <code>ps aux | grep httpd</code>.</div>
+      <div class="mis"><b>En la sala de control</b>Una foto fija de los instrumentos: lo que marcaban justo al pedirla.</div>
+      <pre>$ ps aux --sort=-%cpu | head -3
+<span class="c">USER   PID %CPU %MEM STAT COMMAND
+root  4821 97.8  0.0 R    yes
+root     1  0.0  0.4 Ss   /usr/lib/systemd/systemd</span></pre>
+      <p class="ref">Columna <code>STAT</code>: <code>R</code> ejecutándose, <code>S</code> dormido esperando algo, <code>D</code> esperando disco, <code>T</code> detenido, <code>Z</code> zombi. Datos ilustrativos.</p>
+    </div></details>
+    <details><summary><code>top</code></summary><div class="in">
+      <div class="real"><b>Función real</b>Muestra los procesos en vivo, actualizándose solo cada pocos segundos. Es interactivo: <code>q</code> sale, <code>P</code> ordena por CPU, <code>M</code> por memoria, <code>k</code> envía una señal a un PID y <code>h</code> muestra la ayuda.</div>
+      <div class="mis"><b>En la sala de control</b>Los instrumentos en vivo: se actualizan solos.</div>
+      <figure class="ill"><svg viewBox="0 0 300 158" role="img" aria-label="Comparación entre ps y top"><defs><marker id="arf2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><rect x="6" y="8" width="138" height="140" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><rect x="156" y="8" width="138" height="140" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="75" y="26" fill="#ffb21a" font-size="11.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">ps · foto fija</text><text x="225" y="26" fill="#ffb21a" font-size="11.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">top · en vivo</text><rect x="22" y="32" width="22" height="86" fill="#6df08f"/><rect x="50" y="100" width="22" height="18" fill="#6df08f"/><rect x="78" y="108" width="22" height="10" fill="#6df08f"/><rect x="106" y="112" width="22" height="6" fill="#6df08f"/><rect x="172" y="32" width="22" height="86" fill="#6df08f"><animate attributeName="height" values="86;50;70;86" dur="3s" repeatCount="indefinite"/><animate attributeName="y" values="32;68;48;32" dur="3s" repeatCount="indefinite"/></rect><rect x="200" y="100" width="22" height="18" fill="#6df08f"><animate attributeName="height" values="18;30;12;18" dur="4s" repeatCount="indefinite"/><animate attributeName="y" values="100;88;106;100" dur="4s" repeatCount="indefinite"/></rect><rect x="228" y="108" width="22" height="10" fill="#6df08f"><animate attributeName="height" values="10;18;26;10" dur="5s" repeatCount="indefinite"/><animate attributeName="y" values="108;100;92;108" dur="5s" repeatCount="indefinite"/></rect><rect x="256" y="112" width="22" height="6" fill="#6df08f"><animate attributeName="height" values="6;10;6;6" dur="6s" repeatCount="indefinite"/><animate attributeName="y" values="112;108;112;112" dur="6s" repeatCount="indefinite"/></rect><text x="75" y="140" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">no cambia</text><text x="225" y="140" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">se actualiza solo</text><line x1="6" y1="148" x2="6" y2="148" stroke="#6df08f" stroke-width="1.5"/></svg><figcaption>ps entrega una foto del instante en que lo pediste. top es la pantalla de instrumentos: se refresca sola hasta que sales con q.</figcaption></figure>
+      <pre>$ top
+<span class="c">Tasks: 112 total,   1 running, 110 sleeping,   1 zombie
+%Cpu(s): 98.7 us,  0.9 sy
+  PID USER   %CPU %MEM COMMAND
+ 4821 root   97.8  0.0 yes</span></pre>
+      <p class="ref">Para salir de <code>top</code> presiona <code>q</code>. Datos ilustrativos.</p>
+    </div></details>
+    <details><summary><code>kill PID</code> y <code>kill -9 PID</code></summary><div class="in">
+      <div class="real"><b>Función real</b>Envía una señal a un proceso. Sin opción envía <code>SIGTERM</code> (15), que le pide terminar y le deja limpiar antes de salir. <code>kill -9</code> envía <code>SIGKILL</code>, que lo termina sin darle opción.</div>
+      <div class="mis"><b>En la sala de control</b>La orden de apagado ordenado, o el corte de energía forzado.</div>
+      <pre>$ kill 4821
+$ kill -9 4821
+$ kill 4821
+<span class="c">bash: kill: (4821) - No such process</span></pre>
+      <p class="ref">El último mensaje aparece si el proceso ya no existe. Regla de oro: primero <code>kill PID</code>. Si el proceso sigue, entonces <code>kill -9 PID</code>.</p>
+    </div></details>
+    <h2><small>CANAL DE ÓRDENES · SEÑALES</small>Las que debes conocer</h2><div class="concept"><div class="ct"><p style="margin-top:0">Una <b>señal</b> es una orden que se envía a un proceso. Las dos que más usarás son opuestas: una pide con educación y la otra corta de golpe.</p><div class="real"><b>Función real</b><code>SIGTERM</code> deja que el proceso cierre archivos y termine limpio. <code>SIGKILL</code> lo elimina de inmediato y no puede ser ignorada.</div><div class="mis"><b>En la sala de control</b>Apagado ordenado frente a corte de energía.</div></div><figure class="ill"><svg viewBox="0 0 300 204" role="img" aria-label="Señales SIGTERM y SIGKILL como orden de apagado y corte de energía"><defs><marker id="arf3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><rect x="95" y="6" width="110" height="38" rx="3" fill="none" stroke="#ffb21a" stroke-width="1.5"/><text x="150" y="22" fill="#ffb21a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">PID 4821 · yes</text><text x="150" y="36" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">proceso desbocado</text><line x1="120" y1="44" x2="70" y2="92" stroke="#6df08f" stroke-width="2" marker-end="url(#arf3)"/><line x1="180" y1="44" x2="230" y2="92" stroke="#e0452c" stroke-width="2" marker-end="url(#arf3)"/><rect x="6" y="94" width="138" height="52" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="75" y="110" fill="#6df08f" font-size="11.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">kill 4821</text><text x="75" y="124" fill="#f4efde" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">SIGTERM (15)</text><text x="75" y="138" fill="#ffb21a" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Apagado ordenado</text><rect x="156" y="94" width="138" height="52" rx="3" fill="none" stroke="#e0452c" stroke-width="1.5"/><text x="225" y="110" fill="#e0452c" font-size="11.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">kill -9 4821</text><text x="225" y="124" fill="#f4efde" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">SIGKILL (9)</text><text x="225" y="138" fill="#ffb21a" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">Corte de energía</text><line x1="75" y1="146" x2="75" y2="166" stroke="#6df08f" stroke-width="2" marker-end="url(#arf3)"/><line x1="225" y1="146" x2="225" y2="166" stroke="#e0452c" stroke-width="2" marker-end="url(#arf3)"/><text x="75" y="180" fill="#6df08f" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">guarda y cierra</text><text x="225" y="180" fill="#e0452c" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">muere al instante</text><text x="75" y="193" fill="#f4efde" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">puede ignorarla</text><text x="225" y="193" fill="#f4efde" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">no se puede ignorar</text></svg><figcaption>Primero la orden de apagado ordenado. Solo si el proceso no responde, el corte de energía: no le da tiempo de guardar nada.</figcaption></figure></div>
+    <div class="tw"><table>
+      <tr><th>Nº</th><th>Nombre</th><th>Efecto</th></tr>
+      <tr><td>1</td><td><code>SIGHUP</code></td><td>Colgar. Muchos servicios la usan para releer su configuración.</td></tr>
+      <tr><td>2</td><td><code>SIGINT</code></td><td>Interrupción. Es lo que envía <code>Ctrl+C</code>.</td></tr>
+      <tr><td>9</td><td><code>SIGKILL</code></td><td>Terminación forzada. No se puede ignorar ni capturar.</td></tr>
+      <tr><td>15</td><td><code>SIGTERM</code></td><td>Terminación ordenada. Es la que <code>kill</code> envía por defecto.</td></tr>
+    </table></div>
+    <p class="ref">Con <code>kill -l</code> ves la lista completa de tu sistema. Fuente: signal(7).</p>
+    <div class="next"><button class="btn" data-nx="a">Anterior</button><button class="btn go" data-nx="c">Siguiente: radar</button></div>
+  </div>
+
+<!-- C -->
+  <div class="pane" data-p="c">
+    <div class="sheet"><span class="fig">SIMULADOR</span>
+      <h3 style="margin-top:0">Cómo se usa (solo clics)</h3>
+      <ol class="how">
+        <li><b>Esto no es una terminal: no se escribe nada.</b> Todo se hace con clics en los botones.</li>
+        <li><b>Mira la tabla.</b> Cada fila es un proceso. Busca el que tiene el <b>%CPU</b> más alto: esa es la anomalía.</li>
+        <li><b>Pulsa el botón <code>kill</code> de esa fila.</b> Es como escribir <code>kill PID</code> en un servidor real. El botón <code>kill -9</code> es la versión forzada.</li>
+        <li><b>Los botones <code>ps</code> y <code>w</code></b> de la barra de abajo muestran lo que mostrarían esos comandos. Lee siempre el mensaje [CONTROL]: te explica qué pasó.</li>
+      </ol>
+      <div class="seg" id="seg"><button class="on" data-m="1">Misión 1: el desbocado</button><button data-m="2">Misión 2: el terco</button></div>
+      <p id="goal" style="margin-top:0"></p>
+    </div>
+    <div class="mon"><div class="scr2" id="con">
+      <div class="stamp" id="stamp">TELEMETRÍA NOMINAL</div>
+      <div class="hd"><span id="hdA"></span><span id="hdB"></span><span id="hdC"></span></div>
+      <div class="rows" id="rows"></div>
+      <div class="term">
+        <div class="tl" id="tl"></div>
+        <div class="pl" style="flex-wrap:wrap"><span>Comandos de consulta:</span><span class="sig"><button data-c="ps">ps</button><button data-c="w">w</button><button data-c="top">top</button><button data-c="clear">limpiar</button></span></div>
+      </div>
+    </div></div>
+    <p><button class="btn" id="reset">Reiniciar misión</button> <span class="ref">Simulador didáctico: no ejecuta nada real en tu equipo.</span></p>
+    <div class="sheet debrief" id="debrief"><span class="fig">INFORME</span><p id="debText" style="margin-top:0"></p></div>
+    <div class="next"><button class="btn" data-nx="b">Anterior</button><button class="btn go" data-nx="d">Siguiente: práctica</button></div>
+  </div>
+
+  
+
+  <div class="pane" data-p="d">
+    <div class="banner"><b>PRÁCTICA</b><span>Repite estos pasos en tu servidor Fedora las veces que quieras. No se entrega nada: es para que domines cada comando. Ve marcando lo que ya hiciste.</span></div>
+    <div class="check" data-check>
+      <span class="go-stamp">GO</span>
+      <label class="chk"><input type="checkbox"><span><b>Ver quién está conectado</b><br><code>w</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Crear un proceso de prueba que consuma CPU</b><br><code>yes &gt; /dev/null &amp;</code><br><span class="ref">Es seguro: solo gasta CPU y no escribe nada. El <code>&amp;</code> lo manda al fondo y muestra su PID.</span></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Ver los procesos ordenados por CPU</b><br><code>ps aux --sort=-%cpu | head</code><br><span class="ref">Cada sistema tiene PID distintos: el tuyo no será igual al de un compañero.</span></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Ver lo mismo en vivo y salir</b><br><code>top</code> (sale con <code>q</code>)</span></label>
+      <label class="chk"><input type="checkbox"><span><b>Enviar la señal amable primero</b><br><code>kill PID</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Comprobar que ya no está</b><br><code>ps aux | grep yes</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Repetir con un proceso que ignora la señal amable y forzarlo</b><br><span class="ref">Algunos procesos la ignoran: en ese caso se usa <code>kill -9 PID</code>.</span></span></label>
+    </div>
+    <div class="next"><button class="btn" data-nx="c">Anterior</button><button class="btn go" data-nx="e">Siguiente: ficha y reto</button></div>
+  </div>
+
+  <div class="pane" data-p="e">
+    <h2><small>CHECKLIST DE VUELO · FICHA DE SEGURIDAD</small>Qué llevarse de este tema</h2>
+    <div class="ficha">
+      <div><b>Comandos</b>w, ps, top, kill</div>
+      <div><b>Señal amable</b>SIGTERM (15)</div>
+      <div><b>Señal forzada</b>SIGKILL (9)</div>
+      <div><b>Riesgo principal</b>Finalizar el proceso equivocado, por ejemplo PID 1 o el servicio de SSH, y perder el acceso al servidor.</div>
+      <div><b>Buena práctica</b>Confirmar el PID y el nombre del proceso antes de enviar la señal, y empezar siempre por SIGTERM.</div>
+      <div><b>Señal de alerta</b>Un proceso con nombre desconocido consumiendo CPU. Averigua quién lo lanzó antes de cerrar el caso.</div>
+    </div>
+    <p>La ficha resume el tema en seis datos. Si puedes explicar cada uno con tus palabras, dominas la fase.</p>
+
+    <div class="ctf" data-ctf="proc" data-val="143">
+      <h3>Código de autenticación, fase 1: código de salida</h3>
+      <p>En tu servidor, ejecuta este comando completo. Crea un proceso, le envía SIGTERM y guarda cómo terminó:</p>
+      <pre>sleep 900 &amp; kill $!; wait $! 2&gt;/dev/null; r=$?; echo "$(hostname)|$r" | sha256sum | cut -c1-8</pre>
+      <p class="ref">Imprime 8 caracteres. Escribe aquí tu <b>nombre de host</b> (el que muestra <code>hostname</code>) y esos 8 caracteres. Cada estudiante obtiene un código distinto, porque depende de su hostname.</p>
+      <input type="text" class="ch" placeholder="hostname" aria-label="Nombre de host" autocapitalize="off" spellcheck="false">
+      <input type="text" class="cc" placeholder="8 caracteres" aria-label="Código" autocapitalize="off" spellcheck="false">
+      <button class="btn go cbtn">Verificar</button>
+      <div class="msg"></div>
+    </div>
+    <div class="next"><button class="btn" data-nx="d">Anterior</button><button class="btn go" data-go="shell">Siguiente fase: 4.2 Shell y Bash</button></div>
+  </div>
+</section>
+<!-- 4.2 SHELL -->
+<section class="view" id="v-shell">
+  <p class="mono ref" style="letter-spacing:.12em;color:var(--orange)">FASE 2 · 4.2 · SHELL Y BASH</p>
+  <h1 style="margin-top:6px">Secuencias de vuelo</h1>
+  <p class="lead">El shell es el programa con el que hablas con el sistema operativo. Un script es una secuencia de comandos guardada en un archivo para que se ejecute siempre igual, sin que tengas que escribirla de nuevo.</p>
+  <div class="scene" aria-hidden="true"><div class="scr3"><svg viewBox="0 0 180 180" aria-hidden="true"><rect x="0" y="150" width="180" height="30" fill="#1b2b20"/><path d="M60 150v-60h12v60zM108 150v-60h12v60z" fill="#3b3e36" stroke="#6df08f" stroke-width="1"/><g transform="translate(90 0)"><path d="M0 18c14 18 18 44 18 70v34h-36V88c0-26 4-52 18-70z" fill="#f4efde" stroke="#1d1f1b" stroke-width="3"/><circle cx="0" cy="68" r="8" fill="#d9531e" stroke="#1d1f1b" stroke-width="3"/><path d="M-18 100l-14 26 14-4zM18 100l14 26-14-4z" fill="#d9531e" stroke="#1d1f1b" stroke-width="3"/><path class="flame" d="M-9 122l9 24 9-24z" fill="#ffb21a"/></g><g fill="#6df08f" font-family="VT323,monospace" font-size="13"><text x="4" y="14">01 OK</text><text x="4" y="28">02 OK</text><text x="4" y="42">03 GO</text></g></svg></div><div class="rd"><div class="tt">T-03 · FASE 2</div><div><span>SISTEMA</span><b>SHELL Y BASH</b></div><div><span>INSTRUMENTO</span><b>SECUENCIA</b></div><div><span>OBJETIVO</span><b>AUTOMATIZAR PASOS</b></div><div><span>ESTADO</span><b>NOMINAL</b></div></div></div>
+  <div class="tabs" role="tablist">
+    <button class="on" data-t="a"><i>PASO 1</i>Shell</button>
+    <button data-t="b"><i>PASO 2</i>Bash</button>
+    <button data-t="c"><i>PASO 3</i>Laboratorio</button>
+    <button data-t="d"><i>PASO 4</i>Detective</button>
+    <button data-t="e"><i>PASO 5</i>Práctica</button>
+    <button data-t="f"><i>PASO 6</i>Ficha y reto</button>
+  </div>
+
+  <div class="pane on" data-p="a">
+    <div class="sheet"><span class="fig">FIG. 4.2-A</span>
+      <h3 style="margin-top:0">Qué es un shell</h3>
+      <p style="margin-top:0">Un <b>shell</b> es un intérprete de comandos: lee lo que escribes, lo traduce en acciones del sistema y te muestra el resultado. Es la capa entre tú y el núcleo. Puede usarse de forma <b>interactiva</b> (escribes y respondes) o para ejecutar <b>scripts</b>.</p>
+      <div class="mis"><b>En la sala de control</b>El operador de la consola: recibe tus órdenes y las transmite a la nave.</div>
+    </div>
+    <figure class="ill"><svg viewBox="0 0 300 152" role="img" aria-label="Tú, el shell y el núcleo"><defs><marker id="arf5" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><circle cx="46" cy="36" r="12" fill="none" stroke="#ffb21a" stroke-width="2"/><path d="M26 82v-18a20 20 0 0 1 40 0v18z" fill="none" stroke="#ffb21a" stroke-width="2"/><text x="46" y="100" fill="#ffb21a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">TÚ</text><text x="46" y="113" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Tripulante</text><rect x="110" y="28" width="80" height="56" rx="3" fill="none" stroke="#6df08f" stroke-width="2"/><rect x="118" y="36" width="64" height="26" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="150" y="54" fill="#6df08f" font-size="12" text-anchor="middle" font-family="IBM Plex Mono,monospace">$ ls</text><text x="150" y="100" fill="#ffb21a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">SHELL</text><text x="150" y="113" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">Consola de control</text><path d="M246 90V50l14-24 14 24v40z" fill="none" stroke="#6df08f" stroke-width="2"/><circle cx="260" cy="56" r="5" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="260" y="106" fill="#ffb21a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">NÚCLEO</text><text x="260" y="119" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">La nave</text><line x1="72" y1="56" x2="108" y2="56" stroke="#6df08f" stroke-width="2" marker-end="url(#arf5)"/><line x1="192" y1="56" x2="236" y2="56" stroke="#6df08f" stroke-width="2" marker-end="url(#arf5)"/><line x1="236" y1="74" x2="192" y2="74" stroke="#ffb21a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arf5)"/><line x1="108" y1="74" x2="72" y2="74" stroke="#ffb21a" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arf5)"/><text x="90" y="48" fill="#f4efde" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">orden</text><text x="214" y="48" fill="#f4efde" font-size="8.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">traduce</text><text x="150" y="142" fill="#ffb21a" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">respuesta de vuelta por el mismo camino</text></svg><figcaption>Tú no hablas con el núcleo directamente: escribes en la consola, el shell traduce tu orden, el núcleo la ejecuta y la respuesta regresa por el mismo camino.</figcaption></figure>
+    <h2><small>CONSOLAS · TIPOS DE SHELL</small>Hay varios, y cada uno tiene su estilo</h2>
+    <div class="tw"><table>
+      <tr><th>Shell</th><th>Qué es</th></tr>
+      <tr><td><code>sh</code></td><td>El shell original de Bourne. Es el estándar mínimo que otros intentan respetar.</td></tr>
+      <tr><td><code>bash</code></td><td>Bourne Again Shell. El que usa Fedora por defecto y el que estudiamos en este curso.</td></tr>
+      <tr><td><code>zsh</code></td><td>Parecido a bash, con más personalización y autocompletado.</td></tr>
+      <tr><td><code>fish</code></td><td>Pensado para ser amigable: sugiere comandos mientras escribes.</td></tr>
+      <tr><td><code>ksh</code>, <code>csh</code>, <code>tcsh</code></td><td>Familias más antiguas, todavía presentes en algunos entornos.</td></tr>
+    </table></div>
+    <details open><summary>Cómo saber qué shell estás usando</summary><div class="in">
+      <div class="real"><b>Función real</b><code>echo $SHELL</code> muestra tu shell de inicio de sesión, <code>echo $0</code> el shell actual y <code>cat /etc/shells</code> los shells instalados y permitidos.</div>
+      <pre>$ echo $SHELL
+<span class="c">/bin/bash</span>
+$ cat /etc/shells
+<span class="c">/bin/sh
+/bin/bash
+/usr/bin/sh
+/usr/bin/bash</span></pre>
+      <p class="ref">Salida ilustrativa: tu lista puede incluir más shells si instalaste otros.</p>
+    </div></details>
+    <div class="next"><span></span><button class="btn go" data-nx="b">Siguiente: Bash</button></div>
+  </div>
+
+  <div class="pane" data-p="b">
+    <div class="banner"><b>BASH</b><span>Programación básica: lo mínimo para escribir un script útil. Cada bloque trae su ejemplo y lo que verás al ejecutarlo.</span></div>
+    <details open><summary>Crear y ejecutar un script</summary><div class="in">
+      <div class="real"><b>Función real</b>Un script es un archivo de texto. La primera línea (<code>#!/bin/bash</code>) indica con qué intérprete se ejecuta. Se le da permiso de ejecución con <code>chmod +x</code> y se lanza con <code>./</code>.</div>
+      <pre>$ vi hola.sh
+<span class="c">#!/bin/bash
+echo "Hola, control de misión"</span>
+$ chmod +x hola.sh
+$ ./hola.sh
+<span class="c">Hola, control de misión</span></pre>
+      <p class="ref">Si no le das permiso de ejecución, puedes correrlo con <code>bash hola.sh</code>. Las líneas que empiezan con <code>#</code> (salvo la primera) son comentarios.</p>
+    </div></details>
+    <details><summary>Variables</summary><div class="in">
+      <div class="real"><b>Función real</b>Una variable guarda un valor para usarlo después. Se asigna <b>sin espacios</b> alrededor del <code>=</code> y se lee con <code>$</code>. La salida de un comando se guarda con <code>$(...)</code>.</div>
+      <div class="mis"><b>En la sala de control</b>Un compartimento con etiqueta.</div>
+      <figure class="ill"><svg viewBox="0 0 300 118" role="img" aria-label="Variable como compartimento etiquetado"><defs><marker id="arf6" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><rect x="70" y="20" width="160" height="52" rx="3" fill="none" stroke="#6df08f" stroke-width="2"/><rect x="84" y="6" width="70" height="18" rx="3" fill="#0b140e" stroke="#ffb21a" stroke-width="1.5"/><text x="119" y="19" fill="#ffb21a" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">NOMBRE</text><text x="150" y="52" fill="#f4efde" font-size="14" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">Misión Alfa</text><text x="150" y="92" fill="#6df08f" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace">NOMBRE="Misión Alfa"</text><text x="150" y="108" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">sin espacios alrededor del =</text></svg><figcaption>Una variable es un compartimento con etiqueta: guarda un valor y lo recuperas por su nombre con $NOMBRE.</figcaption></figure>
+      <pre>NOMBRE="Misión Alfa"
+FECHA=$(date +%F)
+echo "Hola $NOMBRE, hoy es $FECHA"
+<span class="c">Hola Misión Alfa, hoy es 2026-11-23</span></pre>
+      <p class="ref">La fecha de la salida cambia según el día en que lo ejecutes. Usa comillas dobles al leer variables: <code>"$NOMBRE"</code>.</p>
+    </div></details>
+    <details><summary>Argumentos y código de salida: <code>$1</code>, <code>$#</code>, <code>$?</code></summary><div class="in">
+      <div class="real"><b>Función real</b><code>$1</code> es el primer argumento con el que se llamó al script, <code>$#</code> cuántos recibió y <code>$?</code> el código de salida del último comando (0 significa éxito, cualquier otro número, error).</div>
+      <div class="mis"><b>En la sala de control</b>Las luces de estado: verde o roja.</div>
+      <figure class="ill"><svg viewBox="0 0 300 108" role="img" aria-label="Código de salida como luces de estado"><defs><marker id="arf9" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><circle cx="86" cy="36" r="18" fill="#6df08f"/><circle cx="214" cy="36" r="18" fill="#e0452c"/><text x="86" y="41" fill="#0b140e" font-size="16" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">0</text><text x="214" y="41" fill="#f4efde" font-size="15" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">≠0</text><text x="86" y="72" fill="#6df08f" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace">nominal</text><text x="214" y="72" fill="#e0452c" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace">anomalía</text><text x="150" y="98" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">echo $?  muestra el código del último comando</text></svg><figcaption>Cada comando deja un código de salida: 0 es luz verde (todo bien); cualquier otro número es luz roja.</figcaption></figure>
+      <pre>$ ./saludo.sh Ana
+<span class="c">Hola Ana</span>
+$ ls /no_existe; echo $?
+<span class="c">ls: cannot access '/no_existe': No such file or directory
+2</span></pre>
+    </div></details>
+    <details><summary>Condicionales: <code>if</code></summary><div class="in">
+      <div class="real"><b>Función real</b>Ejecuta un bloque solo si se cumple una condición. Lo que va entre corchetes se llama prueba: <code>-f</code> (es un archivo), <code>-d</code> (es un directorio), <code>-gt</code> (mayor que), <code>-eq</code> (igual a). Deja espacio dentro de los corchetes.</div>
+      <div class="mis"><b>En la sala de control</b>Una compuerta go / no-go.</div>
+      <figure class="ill"><svg viewBox="0 0 300 104" role="img" aria-label="Condicional como compuerta go no-go"><defs><marker id="arf7" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><path d="M150 8l60 28-60 28-60-28z" fill="none" stroke="#ffb21a" stroke-width="2"/><text x="150" y="39" fill="#f4efde" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">¿existe?</text><line x1="210" y1="36" x2="262" y2="36" stroke="#6df08f" stroke-width="2" marker-end="url(#arf7)"/><text x="240" y="26" fill="#6df08f" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">GO</text><rect x="220" y="44" width="76" height="26" rx="3" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="258" y="61" fill="#6df08f" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace">then</text><line x1="90" y1="36" x2="38" y2="36" stroke="#e0452c" stroke-width="2" marker-end="url(#arf7)"/><text x="60" y="26" fill="#e0452c" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">NO-GO</text><rect x="4" y="44" width="76" height="26" rx="3" fill="none" stroke="#e0452c" stroke-width="1.5"/><text x="42" y="61" fill="#e0452c" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace">else</text><text x="150" y="92" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">if [ -f "$ARCHIVO" ] ... then ... else ... fi</text></svg><figcaption>Un if es una compuerta go / no-go: si la prueba se cumple, sigue por then; si no, por else.</figcaption></figure>
+      <pre>if [ -f "$1" ]
+then
+  echo "El archivo existe"
+else
+  echo "No existe"
+fi</pre>
+      <p class="ref">Cada <code>if</code> termina con <code>fi</code>. Sin <code>then</code> el script falla.</p>
+    </div></details>
+    <details><summary>Ciclos: <code>for</code> y <code>while</code></summary><div class="in">
+      <div class="real"><b>Función real</b><code>for</code> repite un bloque para cada elemento de una lista; <code>while</code> lo repite mientras una condición sea verdadera.</div>
+      <div class="mis"><b>En la sala de control</b>Vueltas a la órbita.</div>
+      <figure class="ill"><svg viewBox="0 0 300 118" role="img" aria-label="Ciclo como vueltas orbitales"><defs><marker id="arf8" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><ellipse cx="150" cy="56" rx="100" ry="34" fill="none" stroke="#6df08f" stroke-width="1.5" stroke-dasharray="4 4"/><circle cx="250" cy="56" r="9" fill="#ffb21a"/><text x="250" y="60" fill="#0b140e" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">1</text><circle cx="100" cy="80" r="9" fill="#ffb21a"/><text x="100" y="84" fill="#0b140e" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">2</text><circle cx="100" cy="32" r="9" fill="#ffb21a"/><text x="100" y="36" fill="#0b140e" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">3</text><text x="150" y="60" fill="#6df08f" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace">for i in 1 2 3</text><text x="150" y="108" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">una vuelta por elemento: do ... done</text></svg><figcaption>Un for repite el bloque una vez por cada elemento de la lista, como vueltas a una órbita.</figcaption></figure>
+      <pre>for i in 1 2 3
+do
+  echo "Paso $i"
+done
+<span class="c">Paso 1
+Paso 2
+Paso 3</span></pre>
+    </div></details>
+    <div class="next"><button class="btn" data-nx="a">Anterior</button><button class="btn go" data-nx="c">Siguiente: laboratorio</button></div>
+  </div>
+
+  <div class="pane" data-p="c">
+    <div class="sheet"><span class="fig">LABORATORIO DE SCRIPTS</span>
+      <h3 style="margin-top:0">Cómo se usa (solo clics)</h3>
+      <ol class="how">
+        <li><b>Elige un script</b> con los botones de abajo.</li>
+        <li><b>Pulsa "Siguiente línea"</b>. El simulador ejecuta una línea a la vez y la resalta en amarillo.</li>
+        <li><b>Mira los paneles:</b> las <b>variables</b> (la que cambió se ilumina) y la <b>salida</b> del script.</li>
+        <li>Lee la nota naranja: te explica qué hizo esa línea. Puedes volver con "Línea anterior" o empezar de nuevo.</li>
+      </ol>
+      <div class="seg" id="labSel"><button class="on" data-l="suma">Script 1: variables y ciclo</button><button data-l="existe">Script 2a: archivo existe</button><button data-l="noexiste">Script 2b: no existe</button></div>
+    </div>
+    <div class="codebox" id="labCode"></div>
+    <div class="ctrl"><button class="btn" id="labPrev">Línea anterior</button><button class="btn go" id="labNext">Siguiente línea</button><button class="btn" id="labReset">Reiniciar</button><span class="ref" id="labPos"></span></div>
+    <div class="vars" id="labVars"></div>
+    <div class="out" id="labOut"></div>
+    <div class="note2" id="labNote"></div>
+    <div class="next"><button class="btn" data-nx="b">Anterior</button><button class="btn go" data-nx="d">Siguiente: detective</button></div>
+  </div>
+
+  <div class="pane" data-p="d">
+    <div class="sheet"><span class="fig">DETECTIVE DE SCRIPTS</span>
+      <p style="margin-top:0">Cada caso trae un script con un fallo típico. Elige cuál es el problema. Pulsa una opción y lee la explicación: así se aprende por qué falla.</p>
+    </div>
+    <div id="det1"></div>
+    <div class="next"><button class="btn" data-nx="c">Anterior</button><button class="btn go" data-nx="e">Siguiente: práctica</button></div>
+  </div>
+
+  <div class="pane" data-p="e">
+    <div class="banner"><b>PRÁCTICA</b><span>Escribe este script en tu servidor Fedora y pruébalo las veces que quieras. No se entrega nada. Es la base que luego automatizarás con cron.</span></div>
+    <div class="sheet"><span class="fig">SCRIPT DE PRÁCTICA</span>
+      <h3 style="margin-top:0">La bitácora de la sala de control</h3>
+      <p style="margin-top:0">Un script que anota en un archivo la hora, la carga del sistema y si SSH está activo.</p>
+      <pre>#!/bin/bash
+ARCHIVO="$HOME/bitacora.log"
+HORA=$(date '+%F %T')
+CARGA=$(cut -d' ' -f1 /proc/loadavg)
+if systemctl is-active --quiet sshd
+then
+  ESTADO="sshd activo"
+else
+  ESTADO="sshd detenido"
+fi
+echo "$HORA | carga $CARGA | $ESTADO" &gt;&gt; "$ARCHIVO"</pre>
+      <p class="ref">Después de ejecutarlo, <code>cat ~/bitacora.log</code> mostrará una línea nueva por cada ejecución. La hora y la carga serán distintas en tu equipo.</p>
+    </div>
+    <div class="check" data-check>
+      <span class="go-stamp">GO</span>
+      <label class="chk"><input type="checkbox"><span><b>Crear el archivo del script</b><br><code>vi bitacora.sh</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Darle permiso de ejecución</b><br><code>chmod +x bitacora.sh</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Ejecutarlo</b><br><code>./bitacora.sh</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Ver el resultado</b><br><code>cat ~/bitacora.log</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Ejecutarlo dos veces más y comprobar que el archivo crece</b><br><code>wc -l ~/bitacora.log</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Cambiar sshd por otro servicio (por ejemplo chronyd) y volver a probar</b></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Revisar el código de salida del script</b><br><code>./bitacora.sh; echo $?</code><br><span class="ref">Debe ser 0 si todo salió bien.</span></span></label>
+    </div>
+    <div class="next"><button class="btn" data-nx="d">Anterior</button><button class="btn go" data-nx="f">Siguiente: ficha y reto</button></div>
+  </div>
+
+  <div class="pane" data-p="f">
+    <h2><small>CHECKLIST DE VUELO · FICHA DE SEGURIDAD</small>Qué llevarse de este tema</h2>
+    <div class="ficha">
+      <div><b>Idea central</b>Un script es una secuencia de comandos guardada en un archivo.</div>
+      <div><b>Primera línea</b><code>#!/bin/bash</code> indica el intérprete.</div>
+      <div><b>Reglas de oro</b>Sin espacios en <code>VAR=valor</code>; variables entre comillas dobles; <code>then</code> y <code>fi</code>; <code>do</code> y <code>done</code>.</div>
+      <div><b>Riesgo principal</b>Usar una variable vacía en un comando destructivo, como <code>rm -rf $DIR/*</code>: si <code>DIR</code> está vacía, borra desde la raíz.</div>
+      <div><b>Buena práctica</b>Probar el script primero con comandos inofensivos (<code>echo</code>), revisar variables y no ejecutarlo como root si no hace falta.</div>
+      <div><b>Permisos</b>Evita <code>chmod 777</code>. Con <code>chmod 700</code> solo tú ejecutas tu script.</div>
+    </div>
+
+    <div class="ctf" data-ctf="shell" data-val="15">
+      <h3>Código de autenticación, fase 2: la suma del ciclo</h3>
+      <p>Ejecuta este comando completo en tu servidor. Suma los números del 1 al 5 con un ciclo y firma el resultado:</p>
+      <pre>n=0; for i in 1 2 3 4 5; do n=$((n+i)); done; echo "$(hostname)|$n" | sha256sum | cut -c1-8</pre>
+      <p class="ref">Escribe tu <b>nombre de host</b> y los 8 caracteres que imprime. Cada estudiante obtiene un código distinto.</p>
+      <input type="text" class="ch" placeholder="hostname" aria-label="Nombre de host" autocapitalize="off" spellcheck="false">
+      <input type="text" class="cc" placeholder="8 caracteres" aria-label="Código" autocapitalize="off" spellcheck="false">
+      <button class="btn go cbtn">Verificar</button>
+      <div class="msg"></div>
+    </div>
+    <div class="next"><button class="btn" data-nx="e">Anterior</button><button class="btn go" data-go="cron">Siguiente fase: 4.2.3 Crontab</button></div>
+  </div>
+</section>
+<!-- 4.2.3 CRON -->
+<section class="view" id="v-cron">
+  <p class="mono ref" style="letter-spacing:.12em;color:var(--orange)">FASE 3 · 4.2.3 · CRONTAB</p>
+  <h1 style="margin-top:6px">Secuencias automáticas</h1>
+  <p class="lead">Una misión larga no se opera a mano las 24 horas. Cron es el planificador que ejecuta tus comandos y scripts a la hora que le indiques, sin que estés presente.</p>
+  <div class="scene" aria-hidden="true"><div class="scr3"><svg viewBox="0 0 180 180" aria-hidden="true"><circle cx="90" cy="90" r="78" fill="none" stroke="#6df08f" stroke-width="1.5"/><g stroke="#6df08f" stroke-width="2"><path d="M90 16v10" transform="rotate(0 90 90)"/><path d="M90 16v5" transform="rotate(30 90 90)"/><path d="M90 16v5" transform="rotate(60 90 90)"/><path d="M90 16v10" transform="rotate(90 90 90)"/><path d="M90 16v5" transform="rotate(120 90 90)"/><path d="M90 16v5" transform="rotate(150 90 90)"/><path d="M90 16v10" transform="rotate(180 90 90)"/><path d="M90 16v5" transform="rotate(210 90 90)"/><path d="M90 16v5" transform="rotate(240 90 90)"/><path d="M90 16v10" transform="rotate(270 90 90)"/><path d="M90 16v5" transform="rotate(300 90 90)"/><path d="M90 16v5" transform="rotate(330 90 90)"/></g><ellipse cx="90" cy="90" rx="58" ry="22" fill="none" stroke="#ffb21a" stroke-width="1" stroke-dasharray="3 4" transform="rotate(-20 90 90)"/><g class="hand"><path d="M90 90L90 30" stroke="#ffb21a" stroke-width="3"/><circle cx="90" cy="28" r="5" fill="#e0452c"/></g><circle cx="90" cy="90" r="5" fill="#6df08f"/><text x="90" y="132" text-anchor="middle" fill="#6df08f" font-family="VT323,monospace" font-size="16">*/5 * * * *</text></svg></div><div class="rd"><div class="tt">T-02 · FASE 3</div><div><span>SISTEMA</span><b>CRONTAB</b></div><div><span>INSTRUMENTO</span><b>RELOJ DE MISIÓN</b></div><div><span>OBJETIVO</span><b>EJECUCIÓN AUTOMÁTICA</b></div><div><span>ESTADO</span><b>NOMINAL</b></div></div></div>
+  <div class="tabs" role="tablist">
+    <button class="on" data-t="a"><i>PASO 1</i>Briefing</button>
+    <button data-t="b"><i>PASO 2</i>Comandos y sintaxis</button>
+    <button data-t="c"><i>PASO 3</i>Constructor</button>
+    <button data-t="d"><i>PASO 4</i>Trampas</button>
+    <button data-t="e"><i>PASO 5</i>Práctica</button>
+    <button data-t="f"><i>PASO 6</i>Ficha y reto</button>
+  </div>
+
+  <div class="pane on" data-p="a">
+    <div class="sheet"><span class="fig">FIG. 4.2.3-A</span>
+      <h3 style="margin-top:0">Cómo funciona</h3>
+      <p style="margin-top:0">El servicio <code>crond</code> (paquete <code>cronie</code>) despierta cada minuto, revisa las tablas de tareas y ejecuta las que coinciden con la hora actual. Cada usuario tiene su propia tabla, llamada <b>crontab</b>, que se edita con el comando <code>crontab</code>.</p>
+      <div class="mis"><b>En la sala de control</b>La secuencia automática: se programa la hora de cada maniobra y la nave la ejecuta sola.</div>
+    </div>
+    <h2><small>CÓMO TRABAJA</small>El vigía del plan de maniobras</h2><div class="concept"><div class="ct"><p style="margin-top:0">Cron no es magia: es un servicio que vigila el reloj. Cada minuto, <code>crond</code> lee tu <b>crontab</b> y compara la hora actual con cada línea.</p><p>Si coincide, lanza el comando o script de esa línea. Si no hay coincidencia, no hace nada hasta el minuto siguiente.</p><div class="mis"><b>En la sala de control</b>Un vigía que revisa el plan de maniobras cada minuto.</div></div><figure class="ill"><svg viewBox="0 0 300 232" role="img" aria-label="Cómo trabaja crond"><defs><marker id="arf10" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><rect x="50" y="8" width="200" height="40" rx="3" fill="none" stroke="#ffb21a" stroke-width="2"/><text x="150" y="25" fill="#ffb21a" font-size="12" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">RELOJ</text><text x="150" y="40" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">cada minuto</text><line x1="150" y1="48" x2="150" y2="66" stroke="#6df08f" stroke-width="2" marker-end="url(#arf10)"/><rect x="50" y="66" width="200" height="40" rx="3" fill="none" stroke="#6df08f" stroke-width="2"/><text x="150" y="83" fill="#6df08f" font-size="12" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">crond</text><text x="150" y="98" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">el vigía (servicio)</text><line x1="150" y1="106" x2="150" y2="124" stroke="#6df08f" stroke-width="2" marker-end="url(#arf10)"/><rect x="50" y="124" width="200" height="40" rx="3" fill="none" stroke="#6df08f" stroke-width="2"/><text x="150" y="141" fill="#6df08f" font-size="12" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">crontab</text><text x="150" y="156" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">plan de maniobras</text><line x1="150" y1="164" x2="150" y2="182" stroke="#6df08f" stroke-width="2" marker-end="url(#arf10)"/><rect x="50" y="182" width="200" height="40" rx="3" fill="none" stroke="#d9531e" stroke-width="2"/><text x="150" y="199" fill="#d9531e" font-size="12" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">script</text><text x="150" y="214" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">la maniobra</text></svg><figcaption>Cada minuto crond revisa el plan de maniobras (tu crontab). Si la hora coincide con una línea, lanza esa maniobra.</figcaption></figure></div><h2><small>PRE-VUELO · VERIFICAR</small>¿Está listo el servicio?</h2>
+    <pre>$ rpm -q cronie
+<span class="c">cronie-1.x.x-x.fc44.x86_64</span>
+$ systemctl status crond
+<span class="c">Active: active (running)</span></pre>
+    <p class="ref">La versión mostrada es ilustrativa. Si <code>rpm -q cronie</code> dice que no está instalado: <code>sudo dnf install cronie</code> y luego <code>sudo systemctl enable --now crond</code>.</p>
+    <div class="sheet"><span class="fig">CONTEXTO</span>
+      <p style="margin-top:0">Cron no es la única forma de programar tareas. En sistemas con systemd existen los <b>timers</b> (<code>systemctl list-timers</code>), que cumplen una función parecida con otra sintaxis. En esta unidad estudiamos cron porque es el planificador clásico y el que verás en casi todo servidor Linux.</p>
+    </div>
+    <div class="next"><span></span><button class="btn go" data-nx="b">Siguiente: comandos y sintaxis</button></div>
+  </div>
+
+  <div class="pane" data-p="b">
+    <div class="banner"><b>COMANDOS</b><span>Cada comando trae su función y un ejemplo de lo que verás. Pruébalos por tu cuenta en tu servidor Fedora.</span></div>
+    <details open><summary><code>crontab -e</code>, <code>crontab -l</code> y <code>crontab -r</code></summary><div class="in">
+      <div class="real"><b>Función real</b><code>-e</code> abre tu tabla de tareas en el editor (vi por defecto), <code>-l</code> la muestra y <code>-r</code> la borra <b>completa y sin pedir confirmación</b>.</div>
+      <div class="mis"><b>En la sala de control</b>Abrir, leer o borrar el plan de maniobras programadas.</div>
+      <pre>$ crontab -l
+<span class="c">no crontab for ana</span>
+$ crontab -e
+<span class="c">(se abre vi; escribes la línea y guardas con :wq)</span>
+$ crontab -l
+<span class="c">*/5 * * * * /home/ana/bitacora.sh</span></pre>
+      <p class="ref">En una instalación nueva la tabla está vacía, por eso <code>crontab -l</code> dice "no crontab". Aprendiste vi en la Unidad 2: aquí vuelve a servir.</p>
+    </div></details>
+    <details open><summary>Los cinco campos</summary><div class="in">
+      <div class="mis"><b>En la sala de control</b>Cinco diales fijan el momento del disparo.</div>
+      <figure class="ill"><svg viewBox="0 0 300 136" role="img" aria-label="Los cinco campos como cinco diales"><defs><marker id="arf11" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><circle cx="30" cy="42" r="22" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="30" y="48" fill="#ffb21a" font-size="16" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">30</text><text x="30" y="84" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">minuto</text><circle cx="90" cy="42" r="22" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="90" y="48" fill="#ffb21a" font-size="16" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">2</text><text x="90" y="84" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">hora</text><circle cx="150" cy="42" r="22" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="150" y="48" fill="#ffb21a" font-size="16" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">*</text><text x="150" y="84" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">día mes</text><circle cx="210" cy="42" r="22" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="210" y="48" fill="#ffb21a" font-size="16" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">*</text><text x="210" y="84" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">mes</text><circle cx="270" cy="42" r="22" fill="none" stroke="#6df08f" stroke-width="1.5"/><text x="270" y="48" fill="#ffb21a" font-size="16" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="700">1</text><text x="270" y="84" fill="#f4efde" font-size="10" text-anchor="middle" font-family="IBM Plex Mono,monospace">día sem</text><text x="150" y="108" fill="#6df08f" font-size="13" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">30 2 * * 1</text><text x="150" y="126" fill="#ffb21a" font-size="11" text-anchor="middle" font-family="IBM Plex Mono,monospace">lunes a las 02:30</text></svg><figcaption>Cinco diales fijan el momento del disparo: minuto, hora, día del mes, mes y día de la semana. El asterisco deja el dial en "cualquiera".</figcaption></figure>
+      <pre>┌───────── minuto (0-59)
+│ ┌─────── hora (0-23)
+│ │ ┌───── día del mes (1-31)
+│ │ │ ┌─── mes (1-12)
+│ │ │ │ ┌─ día de la semana (0-6, domingo = 0 o 7)
+│ │ │ │ │
+* * * * *  comando</pre>
+      <div class="tw"><table>
+        <tr><th>Símbolo</th><th>Significado</th><th>Ejemplo</th></tr>
+        <tr><td><code>*</code></td><td>Cualquier valor</td><td><code>* * * * *</code>: cada minuto</td></tr>
+        <tr><td><code>,</code></td><td>Lista de valores</td><td><code>0 8,20 * * *</code>: a las 8:00 y a las 20:00</td></tr>
+        <tr><td><code>-</code></td><td>Rango</td><td><code>0 9 * * 1-5</code>: lunes a viernes a las 9:00</td></tr>
+        <tr><td><code>/</code></td><td>Cada n pasos</td><td><code>*/15 * * * *</code>: cada 15 minutos</td></tr>
+      </table></div>
+    </div></details>
+    <details><summary>Ejemplos completos</summary><div class="in">
+      <div class="mis"><b>En la sala de control</b>Cada línea es una maniobra con su hora en la línea de tiempo del día.</div>
+      <figure class="ill"><svg viewBox="0 0 300 184" role="img" aria-label="Plan de maniobras sobre la línea de tiempo del día"><defs><marker id="arf12" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#6df08f"/></marker></defs><text x="4" y="36" fill="#ffb21a" font-size="10.5" text-anchor="start" font-family="IBM Plex Mono,monospace" font-weight="600">30 2 * * *</text><text x="296" y="36" fill="#f4efde" font-size="10" text-anchor="end" font-family="IBM Plex Mono,monospace">respaldo diario</text><line x1="4" y1="48" x2="296" y2="48" stroke="#6df08f" stroke-width="1.5"/><circle cx="34.4" cy="48" r="6" fill="#d9531e"/><text x="4" y="76" fill="#ffb21a" font-size="10.5" text-anchor="start" font-family="IBM Plex Mono,monospace" font-weight="600">0 8 * * 1-5</text><text x="296" y="76" fill="#f4efde" font-size="10" text-anchor="end" font-family="IBM Plex Mono,monospace">reporte lun-vie</text><line x1="4" y1="88" x2="296" y2="88" stroke="#6df08f" stroke-width="1.5"/><circle cx="101.3" cy="88" r="6" fill="#d9531e"/><text x="4" y="116" fill="#ffb21a" font-size="10.5" text-anchor="start" font-family="IBM Plex Mono,monospace" font-weight="600">*/5 * * * *</text><text x="296" y="116" fill="#f4efde" font-size="10" text-anchor="end" font-family="IBM Plex Mono,monospace">cada 5 minutos</text><line x1="4" y1="128" x2="296" y2="128" stroke="#6df08f" stroke-width="1.5"/><line x1="4.0" y1="123" x2="4.0" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="10.1" y1="123" x2="10.1" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="16.2" y1="123" x2="16.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="22.2" y1="123" x2="22.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="28.3" y1="123" x2="28.3" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="34.4" y1="123" x2="34.4" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="40.5" y1="123" x2="40.5" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="46.6" y1="123" x2="46.6" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="52.7" y1="123" x2="52.7" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="58.8" y1="123" x2="58.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="64.8" y1="123" x2="64.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="70.9" y1="123" x2="70.9" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="77.0" y1="123" x2="77.0" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="83.1" y1="123" x2="83.1" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="89.2" y1="123" x2="89.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="95.2" y1="123" x2="95.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="101.3" y1="123" x2="101.3" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="107.4" y1="123" x2="107.4" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="113.5" y1="123" x2="113.5" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="119.6" y1="123" x2="119.6" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="125.7" y1="123" x2="125.7" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="131.8" y1="123" x2="131.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="137.8" y1="123" x2="137.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="143.9" y1="123" x2="143.9" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="150.0" y1="123" x2="150.0" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="156.1" y1="123" x2="156.1" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="162.2" y1="123" x2="162.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="168.2" y1="123" x2="168.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="174.3" y1="123" x2="174.3" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="180.4" y1="123" x2="180.4" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="186.5" y1="123" x2="186.5" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="192.6" y1="123" x2="192.6" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="198.7" y1="123" x2="198.7" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="204.8" y1="123" x2="204.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="210.8" y1="123" x2="210.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="216.9" y1="123" x2="216.9" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="223.0" y1="123" x2="223.0" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="229.1" y1="123" x2="229.1" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="235.2" y1="123" x2="235.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="241.2" y1="123" x2="241.2" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="247.3" y1="123" x2="247.3" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="253.4" y1="123" x2="253.4" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="259.5" y1="123" x2="259.5" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="265.6" y1="123" x2="265.6" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="271.7" y1="123" x2="271.7" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="277.8" y1="123" x2="277.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="283.8" y1="123" x2="283.8" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="289.9" y1="123" x2="289.9" y2="133" stroke="#d9531e" stroke-width="2"/><line x1="296.0" y1="123" x2="296.0" y2="133" stroke="#d9531e" stroke-width="2"/><text x="14" y="176" fill="#f4efde" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">00:00</text><line x1="4.0" y1="162" x2="4.0" y2="168" stroke="#6df08f" stroke-width="1"/><text x="77.0" y="176" fill="#f4efde" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">06:00</text><line x1="77.0" y1="162" x2="77.0" y2="168" stroke="#6df08f" stroke-width="1"/><text x="150.0" y="176" fill="#f4efde" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">12:00</text><line x1="150.0" y1="162" x2="150.0" y2="168" stroke="#6df08f" stroke-width="1"/><text x="223.0" y="176" fill="#f4efde" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">18:00</text><line x1="223.0" y1="162" x2="223.0" y2="168" stroke="#6df08f" stroke-width="1"/><text x="286" y="176" fill="#f4efde" font-size="9.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">24:00</text><line x1="296.0" y1="162" x2="296.0" y2="168" stroke="#6df08f" stroke-width="1"/><text x="150" y="12" fill="#ffb21a" font-size="10.5" text-anchor="middle" font-family="IBM Plex Mono,monospace">un día de la misión, de 00:00 a 24:00</text></svg><figcaption>Cada línea del crontab es una maniobra con su hora de disparo. Un asterisco con paso ("*/5") la repite a intervalos regulares.</figcaption></figure>
+      <div class="tw"><table>
+        <tr><th>Línea</th><th>Cuándo se ejecuta</th></tr>
+        <tr><td><code>*/5 * * * *</code></td><td>Cada 5 minutos</td></tr>
+        <tr><td><code>30 2 * * *</code></td><td>Todos los días a las 2:30</td></tr>
+        <tr><td><code>0 8 * * 1-5</code></td><td>Lunes a viernes a las 8:00</td></tr>
+        <tr><td><code>0 0 1 * *</code></td><td>El día 1 de cada mes a medianoche</td></tr>
+        <tr><td><code>@reboot</code></td><td>Una vez, cada vez que arranca el sistema</td></tr>
+        <tr><td><code>@daily</code>, <code>@hourly</code>, <code>@weekly</code></td><td>Atajos para diario, cada hora y semanal</td></tr>
+      </table></div>
+    </div></details>
+    <details><summary>Ver si cron ejecutó la tarea</summary><div class="in">
+      <div class="real"><b>Función real</b>El historial de <code>crond</code> queda en el registro del sistema. Muestra que la tarea se lanzó, pero no si el script hizo bien su trabajo. Para eso, revisa el archivo que genera tu script.</div>
+      <pre>$ journalctl -u crond --since "10 minutes ago"
+<span class="c">... (ana) CMD (/home/ana/bitacora.sh)</span></pre>
+      <p class="ref">La hora y el usuario de la salida serán los tuyos.</p>
+    </div></details>
+    <div class="next"><button class="btn" data-nx="a">Anterior</button><button class="btn go" data-nx="c">Siguiente: constructor</button></div>
+  </div>
+
+  <div class="pane" data-p="c">
+    <div class="sheet"><span class="fig">CONSTRUCTOR DE CRON</span>
+      <h3 style="margin-top:0">Cómo se usa</h3>
+      <ol class="how">
+        <li><b>Escribe en los cinco campos</b> (o pulsa un ejemplo de la fila de abajo).</li>
+        <li><b>Lee la traducción</b> en lenguaje normal.</li>
+        <li><b>Mira las próximas 5 ejecuciones</b>, calculadas con la hora de tu equipo.</li>
+        <li>Si un campo está mal, el constructor te dice cuál.</li>
+      </ol>
+      <div class="seg" style="flex-wrap:wrap" id="presets">
+        <button data-p="*/5 * * * *">Cada 5 min</button>
+        <button data-p="30 2 * * *">Diario 2:30</button>
+        <button data-p="0 8 * * 1-5">Lun-Vie 8:00</button>
+        <button data-p="0 2 * * 0">Domingo 2:00</button>
+        <button data-p="0 0 1 * *">Día 1 del mes</button>
+      </div>
+      <div class="cb" id="cb">
+        <div><label for="f0">Minuto</label><input id="f0" value="*/5" autocomplete="off" spellcheck="false"><small>0-59</small></div>
+        <div><label for="f1">Hora</label><input id="f1" value="*" autocomplete="off" spellcheck="false"><small>0-23</small></div>
+        <div><label for="f2">Día mes</label><input id="f2" value="*" autocomplete="off" spellcheck="false"><small>1-31</small></div>
+        <div><label for="f3">Mes</label><input id="f3" value="*" autocomplete="off" spellcheck="false"><small>1-12</small></div>
+        <div><label for="f4">Día semana</label><input id="f4" value="*" autocomplete="off" spellcheck="false"><small>0-6 (dom=0)</small></div>
+      </div>
+      <div class="cline" id="cLine"></div>
+      <p id="cText" style="font-weight:600"></p>
+      <ul class="runs" id="cRuns"></ul>
+    </div>
+    <div class="next"><button class="btn" data-nx="b">Anterior</button><button class="btn go" data-nx="d">Siguiente: trampas</button></div>
+  </div>
+
+  <div class="pane" data-p="d">
+    <div class="sheet alarm"><span class="fig">TRAMPAS CLÁSICAS</span>
+      <p style="margin-top:0">La mayoría de los "cron no funciona" son una de estas cinco causas.</p>
+      <div class="tw"><table>
+        <tr><th>Trampa</th><th>En la misión</th><th>Qué pasa</th><th>Solución</th></tr>
+        <tr><td><b>Ruta relativa</b></td><td>Una maniobra sin coordenadas: la nave no sabe adónde ir.</td><td>Cron no sabe dónde estás. <code>bitacora.sh</code> no se encuentra.</td><td>Usa la ruta completa: <code>/home/ana/bitacora.sh</code></td></tr>
+        <tr><td><b>Sin permiso de ejecución</b></td><td>El procedimiento existe, pero no está autorizado.</td><td>El script existe, pero no se puede lanzar.</td><td><code>chmod +x</code> al script</td></tr>
+        <tr><td><b>PATH reducido</b></td><td>La nave sale con una caja de herramientas casi vacía.</td><td>Cron usa un entorno mínimo; comandos que en tu terminal funcionan, aquí no se hallan.</td><td>Usa rutas completas (<code>/usr/bin/date</code>) o define <code>PATH</code> en el script</td></tr>
+        <tr><td><b>El carácter %</b></td><td>Un símbolo reservado en el protocolo que corta la orden.</td><td>En crontab <code>%</code> tiene significado especial y corta el comando.</td><td>Escápalo: <code>\%</code>. Mejor: ponlo dentro del script.</td></tr>
+        <tr><td><b>Salida perdida</b></td><td>Telemetría que nadie recibe: no queda registro.</td><td>La salida se envía por correo local y no la ves.</td><td>Redirige: <code>&gt;&gt; /home/ana/cron.log 2&gt;&amp;1</code></td></tr>
+      </table></div>
+    </div>
+    <div id="det2"></div>
+    <div class="next"><button class="btn" data-nx="c">Anterior</button><button class="btn go" data-nx="e">Siguiente: práctica</button></div>
+  </div>
+
+  <div class="pane" data-p="e">
+    <div class="banner"><b>PRÁCTICA</b><span>Programa el script de la bitácora con cron en tu servidor Fedora. No se entrega nada. Probar cada minuto primero es la técnica de los profesionales.</span></div>
+    <div class="check" data-check>
+      <span class="go-stamp">GO</span>
+      <label class="chk"><input type="checkbox"><span><b>Confirmar que cron está activo</b><br><code>systemctl status crond</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Ver tu tabla actual</b><br><code>crontab -l</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Programar el script cada minuto, con ruta completa y salida a un archivo</b><br><code>crontab -e</code><br><code>* * * * * /home/TU_USUARIO/bitacora.sh &gt;&gt; /home/TU_USUARIO/cron.log 2&gt;&amp;1</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Confirmar que quedó guardada</b><br><code>crontab -l</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Esperar unos minutos y ver que el archivo crece</b><br><code>tail ~/bitacora.log</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Ver el registro de cron</b><br><code>journalctl -u crond --since "10 minutes ago"</code></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Cambiar la frecuencia a cada 5 minutos</b><br><span class="ref">Usa el constructor de la pestaña anterior para escribir la expresión.</span></span></label>
+      <label class="chk"><input type="checkbox"><span><b>Dejar el servidor limpio al terminar</b><br><code>crontab -e</code> y borrar la línea<br><span class="ref">Evita <code>crontab -r</code> si tienes otras tareas: borra toda la tabla sin confirmar.</span></span></label>
+    </div>
+    <div class="next"><button class="btn" data-nx="d">Anterior</button><button class="btn go" data-nx="f">Siguiente: ficha y reto</button></div>
+  </div>
+
+  <div class="pane" data-p="f">
+    <h2><small>CHECKLIST DE VUELO · FICHA DE SEGURIDAD</small>Qué llevarse de este tema</h2>
+    <div class="ficha">
+      <div><b>Comandos</b><code>crontab -e</code>, <code>crontab -l</code>, <code>crontab -r</code></div>
+      <div><b>Formato</b>minuto hora día-mes mes día-semana comando</div>
+      <div><b>Servicio</b><code>crond</code> (paquete cronie)</div>
+      <div><b>Riesgo principal</b>Programar como root un script que no revisaste: se ejecutará con todos los privilegios, solo y sin que nadie lo vea.</div>
+      <div><b>Buena práctica</b>Usar un usuario sin privilegios, rutas completas, probar el script a mano y guardar la salida en un archivo.</div>
+      <div><b>Señal de alerta</b>Una tarea que no recuerdas haber creado. Los atacantes usan cron para volver a entrar: revisa <code>crontab -l</code> con regularidad.</div>
+    </div>
+
+    <div class="ctf" data-ctf="cron" data-val="0 2 * * 0" data-alt="0 2 * * 7">
+      <h3>Código de autenticación, fase 3: el horario</h3>
+      <p>Escribe la expresión cron de los cinco campos para: <b>todos los domingos a las 2:00 a.m.</b> Sustituye <code>TU_EXPRESION</code> en este comando por ella (con los cinco campos separados por espacios), ejecútalo y anota los 8 caracteres:</p>
+      <pre>echo "$(hostname)|TU_EXPRESION" | sha256sum | cut -c1-8</pre>
+      <p class="ref">Ejemplo de formato: <code>echo "$(hostname)|15 6 * * 3" ...</code>. Escribe aquí tu <b>nombre de host</b> y los 8 caracteres. El constructor de cron te ayuda a comprobar la expresión.</p>
+      <input type="text" class="ch" placeholder="hostname" aria-label="Nombre de host" autocapitalize="off" spellcheck="false">
+      <input type="text" class="cc" placeholder="8 caracteres" aria-label="Código" autocapitalize="off" spellcheck="false">
+      <button class="btn go cbtn">Verificar</button>
+      <div class="msg"></div>
+    </div>
+    <div class="next"><button class="btn" data-nx="e">Anterior</button><button class="btn go" data-go="bit">Cierre: bitácora de misión</button></div>
+  </div>
+</section>
+
+<!-- BITACORA -->
+<section class="view" id="v-bit">
+  <p class="mono ref" style="letter-spacing:.12em;color:var(--orange)">CIERRE · BITÁCORA DE MISIÓN</p>
+  <h1 style="margin-top:6px">Misión cumplida</h1>
+  <p class="lead">Empezaste instalando un servidor. Ahora lo operas, lo vigilas y lo dejas trabajando solo. Este es el registro de todo el recorrido.</p>
+  <div class="scene" aria-hidden="true"><div class="scr3"><svg viewBox="0 0 180 180" aria-hidden="true"><circle cx="90" cy="90" r="80" fill="#f4efde" stroke="#1d1f1b" stroke-width="4"/><circle cx="90" cy="90" r="64" fill="#272a22" stroke="#ffb21a" stroke-width="3"/><circle cx="90" cy="98" r="22" fill="#d9531e" stroke="#f4efde" stroke-width="2"/><ellipse cx="90" cy="98" rx="46" ry="12" fill="none" stroke="#6df08f" stroke-width="2.5" transform="rotate(-20 90 98)"/><path d="M90 30l5 11 12 1-9 8 3 12-11-7-11 7 3-12-9-8 12-1z" fill="#ffb21a"/></svg></div><div class="rd"><div class="tt">T+ FINAL</div><div><span>MISIÓN</span><b>GSO II</b></div><div><span>FASES</span><b>4 DE 4</b></div><div><span>ESTADO</span><b>CUMPLIDA</b></div></div></div>
+  <div class="tl2">
+    <div class="unit"><span class="n">01</span><div><h3 style="margin:0">Introducción al sistema operativo Linux</h3><ul><li>Historia, distribuciones y modo servidor</li><li>Instalación de Fedora Server 44</li><li>Comandos básicos y gestión de paquetes con dnf</li></ul></div></div>
+    <div class="unit"><span class="n">02</span><div><h3 style="margin:0">Sistema de archivos, usuarios, grupos y permisos</h3><ul><li>Directorios y archivos, redirectores y tuberías</li><li>Compresión, respaldo y el editor vi</li><li>Usuarios, grupos y permisos (chown, chgrp, chmod)</li></ul></div></div>
+    <div class="unit"><span class="n">03</span><div><h3 style="margin:0">Servicios de red</h3><ul><li>SSH, FTP, NTP y DHCP</li><li>LAMP, correo, DNS y Samba</li></ul></div></div>
+    <div class="unit"><span class="n">04</span><div><h3 style="margin:0">Procesos, monitorización y automatización con shell</h3><ul><li>w, ps, top y kill</li><li>Shell y programación básica en Bash</li><li>Tareas automáticas con crontab</li></ul></div></div>
+  </div>
+  <h2><small>PARCHES DE MISIÓN · RETOS</small>Insignias</h2>
+  <div class="badges" id="badges">
+    <span data-b="proc">FASE 1 · PROCESOS</span><span data-b="shell">FASE 2 · SHELL</span><span data-b="cron">FASE 3 · CRON</span>
+  </div>
+  <p id="badgeMsg" class="ref">Completa los retos de cada fase para encender sus insignias. Son opcionales: sirven para comprobar que dominas el tema.</p>
+  <div class="sheet"><span class="fig">LO QUE SE VIENE</span>
+    <p style="margin-top:0">El Laboratorio 4 pone en práctica todo lo de esta unidad. El Proyecto No. 2 integra las Unidades 1 a 4: es el momento de usar todo lo que construiste durante el curso.</p>
+  </div>
+  <h2><small>ARCHIVO TÉCNICO · REFERENCIAS</small>Fuentes consultadas</h2>
+  <ul class="refs">
+    <li>Fedora Magazine. (s. f.). <i>Scheduling tasks with cron</i>. <a href="https://fedoramagazine.org/scheduling-tasks-with-cron/">https://fedoramagazine.org/scheduling-tasks-with-cron/</a></li>
+    <li>Free Software Foundation. (s. f.). <i>Bash reference manual</i>. GNU Project. <a href="https://www.gnu.org/software/bash/manual/bash.html">https://www.gnu.org/software/bash/manual/bash.html</a></li>
+    <li>Linux man-pages project. (s. f.). <i>crontab(5)</i>. <a href="https://man7.org/linux/man-pages/man5/crontab.5.html">https://man7.org/linux/man-pages/man5/crontab.5.html</a></li>
+    <li>Linux man-pages project. (s. f.). <i>kill(1)</i>. <a href="https://man7.org/linux/man-pages/man1/kill.1.html">https://man7.org/linux/man-pages/man1/kill.1.html</a></li>
+    <li>Linux man-pages project. (s. f.). <i>ps(1)</i>. <a href="https://man7.org/linux/man-pages/man1/ps.1.html">https://man7.org/linux/man-pages/man1/ps.1.html</a></li>
+    <li>Linux man-pages project. (s. f.). <i>signal(7)</i>. <a href="https://man7.org/linux/man-pages/man7/signal.7.html">https://man7.org/linux/man-pages/man7/signal.7.html</a></li>
+    <li>Linux man-pages project. (s. f.). <i>top(1)</i>. <a href="https://man7.org/linux/man-pages/man1/top.1.html">https://man7.org/linux/man-pages/man1/top.1.html</a></li>
+    <li>systemd. (s. f.). <i>systemd.timer</i>. freedesktop.org. <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html">https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html</a></li>
+  </ul>
+  <div class="next"><button class="btn" data-go="cron">Volver a 4.2.3</button><button class="btn go" data-go="home">Ir a la sala de control</button></div>
+</section>
+</main>
+</div>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var names={home:"Sala de control",proc:"4.1 Procesos",shell:"4.2 Shell y Bash",cron:"4.2.3 Crontab",bit:"Bitácora de misión"},pg={home:8,proc:30,shell:55,cron:80,bit:100},seen={home:1};
+  function show(v){
+    [].forEach.call(document.querySelectorAll(".view"),function(x){x.classList.toggle("on",x.id==="v-"+v)});
+    seen[v]=1;
+    [].forEach.call(document.querySelectorAll(".rail li[data-li]"),function(l){var k=l.getAttribute("data-li");l.classList.toggle("on",k===v);l.classList.toggle("done",!!seen[k]&&k!==v)});
+    $("crumb").textContent=names[v]||"";$("prog").style.width=pg[v]+"%";closeD();window.scrollTo(0,0);
+  }
+  function openD(){$("rail").classList.add("open");$("scrim").classList.add("on")}
+  function closeD(){$("rail").classList.remove("open");$("scrim").classList.remove("on")}
+  $("menuBtn").onclick=function(){$("rail").classList.contains("open")?closeD():openD()};
+  $("scrim").onclick=closeD;
+  [].forEach.call(document.querySelectorAll("[data-v]"),function(a){a.addEventListener("click",function(e){e.preventDefault();show(a.getAttribute("data-v"))})});
+  [].forEach.call(document.querySelectorAll("[data-go]"),function(a){a.addEventListener("click",function(){show(a.getAttribute("data-go"))})});
+  show("home");
+  function tab(view,t){
+    [].forEach.call(view.querySelectorAll(".tabs button"),function(b){b.classList.toggle("on",b.getAttribute("data-t")===t)});
+    [].forEach.call(view.querySelectorAll(".pane"),function(p){p.classList.toggle("on",p.getAttribute("data-p")===t)});
+    var r=view.querySelector(".tabs").getBoundingClientRect();window.scrollTo(0,window.scrollY+r.top-90);
+  }
+  [].forEach.call(document.querySelectorAll(".view .tabs button"),function(b){b.onclick=function(){tab(b.closest(".view"),b.getAttribute("data-t"))}});
+  [].forEach.call(document.querySelectorAll("[data-nx]"),function(b){b.onclick=function(){tab(b.closest(".view"),b.getAttribute("data-nx"))}});
+  /* reloj */
+  var t0=Date.now();function p2(n){return(n<10?"0":"")+n}
+  setInterval(function(){var s=Math.floor((Date.now()-t0)/1000);$("clock").textContent="T+ "+p2(Math.floor(s/3600))+":"+p2(Math.floor(s%3600/60))+":"+p2(s%60)},500);
+
+  /* estrellas */
+  var cv=$("stars"),cx=cv.getContext("2d"),st=[],W=0,H=0,reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function size(){var r=cv.parentNode.getBoundingClientRect();if(!r.width)return;W=cv.width=r.width;H=cv.height=r.height;st=[];for(var i=0;i<Math.round(W*H/5200);i++)st.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+.4,v:Math.random()*.25+.05,p:Math.random()*6})}
+  function draw(t){cx.clearRect(0,0,W,H);for(var i=0;i<st.length;i++){var s=st[i];s.x-=s.v;if(s.x<0)s.x=W;var a=.5+.5*Math.sin(t/700+s.p);cx.fillStyle="rgba(244,239,222,"+(.35+.55*a)+")";cx.fillRect(s.x,s.y,s.r,s.r)}if(!reduce)requestAnimationFrame(draw)}
+  size();window.addEventListener("resize",size);requestAnimationFrame(draw);setTimeout(size,300);
+
+  /* simulador */
+  var base,S,mission=1;
+  function mk(){
+    var hot=mission===1?{pid:4821,cmd:"yes",user:"labuser",cpu:97.4,mem:0.0,stat:"R",k:"hot"}:{pid:5190,cmd:"minerd",user:"labuser",cpu:96.1,mem:2.3,stat:"R",k:"hot",stubborn:true};
+    return [
+      {pid:1,cmd:"systemd",user:"root",cpu:0.3,mem:0.4,stat:"Ss",k:"init"},
+      {pid:812,cmd:"sshd",user:"root",cpu:0.1,mem:0.2,stat:"Ss",k:"sshd"},
+      {pid:955,cmd:"chronyd",user:"chrony",cpu:0.1,mem:0.1,stat:"S",k:"svc"},
+      {pid:1104,cmd:"crond",user:"root",cpu:0.0,mem:0.1,stat:"Ss",k:"svc"},
+      {pid:1420,cmd:"httpd",user:"apache",cpu:1.2,mem:1.6,stat:"S",k:"svc"},
+      {pid:3377,cmd:"[worker] <defunct>",user:"labuser",cpu:0,mem:0,stat:"Z",k:"zombie"},hot];
+  }
+  function line(t,c){var d=document.createElement("div");if(c)d.className=c;d.textContent=t;$("tl").appendChild(d);$("tl").scrollTop=1e5}
+  function note(t){line("[CONTROL] "+t,"n")}
+  function goal(){
+    $("goal").innerHTML=mission===1
+      ?"<b>Objetivo:</b> hay un proceso consumiendo casi toda la CPU. Encuentra su PID y pídele que termine de forma ordenada, sin tocar los servicios sanos."
+      :"<b>Objetivo:</b> otro proceso consume la CPU, y este no obedece a la primera. Pide su cierre ordenado y, si no responde, escala a la señal forzada. Fíjate también en su nombre.";
+  }
+  function init(){
+    base=mk();S={dead:{},damaged:0,done:false,termSent:false};
+    $("stamp").classList.remove("on");$("debrief").classList.remove("on");$("tl").innerHTML="";
+    note("Misión "+mission+" iniciada. Pulsa los botones de cada fila para enviar señales, o los de abajo para consultar.");
+    goal();render();
+  }
+  function render(){
+    var rows=base.filter(function(p){return !S.dead[p.pid]}).slice().sort(function(a,b){return b.cpu-a.cpu});
+    var h='<div class="crow h"><span>PID</span><span>USER</span><span>CPU</span><span>%CPU</span><span>EST</span><span>ATAJO</span></div>';
+    rows.forEach(function(p){
+      h+='<div class="crow'+(p.k==="hot"?" hot":"")+'" data-r="'+p.pid+'"><span>'+p.pid+'</span><span>'+p.user+'</span><span class="bar"><i style="width:'+Math.min(100,p.cpu)+'%"></i></span><span>'+p.cpu.toFixed(1)+'</span><span>'+p.stat+'</span><span class="sig"><button data-c="kill '+p.pid+'">kill</button><button class="k" data-c="kill -9 '+p.pid+'">kill -9</button></span></div>';
+    });
+    $("rows").innerHTML=h;
+    var tot=0,z=0;rows.forEach(function(p){tot+=p.cpu;if(p.k==="zombie")z++});
+    $("hdA").textContent="Tareas: "+rows.length;$("hdB").textContent="CPU: "+Math.min(100,tot).toFixed(0)+"%";$("hdC").textContent="Zombis: "+z;
+  }
+  function snapshot(){
+    var rows=base.filter(function(p){return !S.dead[p.pid]}).slice().sort(function(a,b){return b.cpu-a.cpu});
+    function pad(s,n){s=String(s);while(s.length<n)s+=" ";return s}
+    line(pad("USER",9)+pad("PID",7)+pad("%CPU",7)+pad("STAT",6)+"COMMAND");
+    rows.forEach(function(p){line(pad(p.user,9)+pad(p.pid,7)+pad(p.cpu.toFixed(1),7)+pad(p.stat,6)+p.cmd)});
+  }
+  function kill(args){
+    var sig=15,pid=null,bad=false;
+    for(var i=0;i<args.length;i++){
+      var a=args[i];
+      if(a[0]==="-"&&pid===null){
+        var s=a.slice(1).toUpperCase().replace(/^SIG/,"");
+        if(s==="9"||s==="KILL")sig=9;else if(s==="15"||s==="TERM")sig=15;
+        else if(/^\d+$/.test(s)||/^[A-Z]+$/.test(s)){note("Este simulador practica solo SIGTERM (15) y SIGKILL (9).");return}
+        else{line("bash: kill: "+a+": invalid signal specification","e");return}
+      }else if(pid===null){pid=a}else{bad=true}
+    }
+    if(pid===null){line("kill: usage: kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]","e");return}
+    if(!/^\d+$/.test(pid)){line("bash: kill: "+pid+": arguments must be process or job IDs","e");return}
+    var n=+pid,p=base.filter(function(x){return x.pid===n&&!S.dead[x.pid]})[0];
+    if(!p){line("bash: kill: ("+n+") - No such process","e");return}
+    if(S.done){note("La misión ya está completada. Pulsa Reiniciar misión para intentarlo de nuevo.");return}
+    if(p.k==="init"){note("Bloqueado por el simulador. PID 1 arranca y sostiene a todos los demás. Un kill mal dirigido aquí no es un ejercicio: es una caída del servidor.");return}
+    if(p.k==="zombie"){note("Sin efecto. El zombi ya terminó: solo es una entrada que espera a que su padre recoja su estado. No se mata al zombi; se atiende a su proceso padre.");return}
+    if(p.k==="sshd"){S.dead[n]=1;S.damaged++;note("Cuidado. Apagaste el demonio de SSH. Tu sesión actual sigue, pero nadie podrá conectarse de nuevo. En un servidor remoto, te quedas fuera.");render();return}
+    if(p.k==="svc"){S.dead[n]=1;S.damaged++;note("Servicio sano apagado: "+p.cmd+". No era el proceso anómalo. Antes de enviar una señal, confirma el PID con la columna %CPU.");render();return}
+    if(p.k==="hot"){
+      if(p.stubborn&&sig===15){S.termSent=true;note("SIGTERM enviada, pero este proceso la ignora y sigue consumiendo CPU. Un proceso puede ignorar SIGTERM; SIGKILL no se puede ignorar. Escala con kill -9.");return}
+      S.dead[n]=1;S.done=true;render();$("stamp").classList.add("on");
+      var d;
+      if(sig===15)d="SIGTERM aceptada. El proceso anómalo cerró de forma ordenada y la CPU volvió a nivel normal.";
+      else if(p.stubborn&&S.termSent)d="Escalaste de forma correcta: primero SIGTERM, que fue ignorada, y después SIGKILL.";
+      else d="SIGKILL ejecutada. Funcionó, pero el proceso no pudo limpiar nada antes de morir. Se usa cuando SIGTERM no responde.";
+      note(d+" Servicios dañados: "+S.damaged+".");
+      $("debText").innerHTML=(p.stubborn
+        ?"<b>Lo que hiciste en la vida real:</b> finalizaste un proceso que ignoraba la señal amable. <b>Pero matarlo no basta.</b> Un proceso llamado <code>minerd</code> que nadie instaló es un indicio de intrusión: en un servidor real, antes de cerrar el caso se investiga quién lo lanzó, desde dónde y qué lo vuelve a iniciar (por ejemplo, una tarea programada con cron)."
+        :"<b>Lo que hiciste en la vida real:</b> con <code>top</code> o <code>ps</code> localizas el PID que más consume y con <code>kill PID</code> le pides que termine. Si no responde, <code>kill -9 PID</code>. Compara con lo que hacías al principio: primero identificar, después actuar.");
+      $("debrief").classList.add("on");
+    }
+  }
+  function run(cmd){
+    cmd=cmd.trim();if(!cmd)return;line("$ "+cmd);
+    var t=cmd.split(/\s+/),c=t[0];
+    if(c==="help"){line("Comandos disponibles:");line("  ps | top      ver los procesos");line("  w             ver quién está conectado");line("  kill PID      pedir que termine (SIGTERM)");line("  kill -9 PID   forzar el cierre (SIGKILL)");line("  clear         limpiar la pantalla");return}
+    if(c==="clear"){$("tl").innerHTML="";return}
+    if(c==="ps"||c==="top"){snapshot();if(c==="top")note("En un servidor real, top se actualiza solo y se sale con la tecla q.");return}
+    if(c==="w"){line(" 20:04:11 up 3 days, 2:10,  1 user,  load average: "+(base.filter(function(p){return p.k==='hot'&&!S.dead[p.pid]}).length?"1.92, 1.40, 0.88":"0.20, 0.55, 0.70"));line("USER     TTY      FROM            LOGIN@   WHAT");line("labuser  pts/0    192.168.60.10   19:50    w");return}
+    if(c==="kill"){kill(t.slice(1));return}
+    line("bash: "+c+": command not found","e");
+  }
+  
+  $("rows").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;run(b.getAttribute("data-c"))});
+  $("reset").onclick=init;
+  document.querySelector(".pl").addEventListener("click",function(e){var b=e.target.closest("button");if(b)run(b.getAttribute("data-c"))});
+  [].forEach.call(document.querySelectorAll("#seg button"),function(b){b.onclick=function(){mission=+b.getAttribute("data-m");[].forEach.call(document.querySelectorAll("#seg button"),function(x){x.classList.toggle("on",x===b)});init()}});
+  setInterval(function(){if(S.done)return;
+    base.forEach(function(p){
+      if(p.k==="hot")p.cpu=Math.max(91,Math.min(99.6,p.cpu+(Math.random()-.5)*3));
+      else if(p.k==="svc"||p.k==="sshd")p.cpu=Math.max(0,+(p.cpu+(Math.random()-.5)*.4).toFixed(1));
+      var r=document.querySelector('.crow[data-r="'+p.pid+'"]');
+      if(r){r.querySelector(".bar i").style.width=Math.min(100,p.cpu)+"%";r.children[3].textContent=p.cpu.toFixed(1)}
+    });
+    var tot=0;base.forEach(function(p){if(!S.dead[p.pid])tot+=p.cpu});$("hdB").textContent="CPU: "+Math.min(100,tot).toFixed(0)+"%";
+  },1200);
+  init();
+  /* ===== sha256 ===== */
+  function sha256(str){
+    var K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    var H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    var b=new TextEncoder().encode(str),l=b.length,n=((l+9+63)>>6)<<6,m=new Uint8Array(n);
+    m.set(b);m[l]=0x80;var dv=new DataView(m.buffer);dv.setUint32(n-8,Math.floor(l*8/4294967296));dv.setUint32(n-4,(l*8)>>>0);
+    function rr(x,k){return(x>>>k)|(x<<(32-k))}
+    var w=new Array(64);
+    for(var o=0;o<n;o+=64){
+      for(var i=0;i<16;i++)w[i]=dv.getUint32(o+i*4);
+      for(i=16;i<64;i++){var s0=rr(w[i-15],7)^rr(w[i-15],18)^(w[i-15]>>>3),s1=rr(w[i-2],17)^rr(w[i-2],19)^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0}
+      var a=H[0],bb=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+      for(i=0;i<64;i++){
+        var S1=rr(e,6)^rr(e,11)^rr(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])>>>0,S0=rr(a,2)^rr(a,13)^rr(a,22),mj=(a&bb)^(a&c)^(bb&c),t2=(S0+mj)>>>0;
+        h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=bb;bb=a;a=(t1+t2)>>>0;
+      }
+      H[0]=(H[0]+a)>>>0;H[1]=(H[1]+bb)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0;
+    }
+    return H.map(function(x){return("00000000"+x.toString(16)).slice(-8)}).join("");
+  }
+  window.__sha=sha256;
+
+  /* ===== retos ===== */
+  var solved={};
+  function badges(){
+    var n=0;[].forEach.call(document.querySelectorAll("#badges span"),function(s){var on=!!solved[s.getAttribute("data-b")];s.classList.toggle("on",on);if(on)n++});
+    $("badgeMsg").textContent=n===3?"Misión completa: los tres retos superados.":"Retos superados: "+n+" de 3. Son opcionales: sirven para comprobar que dominas el tema.";
+  }
+  [].forEach.call(document.querySelectorAll("[data-ctf]"),function(box){
+    var vals=[box.getAttribute("data-val")];if(box.getAttribute("data-alt"))vals.push(box.getAttribute("data-alt"));
+    box.querySelector(".cbtn").onclick=function(){
+      var host=box.querySelector(".ch").value.trim(),code=box.querySelector(".cc").value.trim().toLowerCase(),msg=box.querySelector(".msg");
+      if(!host||!code){msg.textContent="Escribe tu hostname y los 8 caracteres.";return}
+      var ok=vals.some(function(v){return sha256(host+"|"+v+"\n").slice(0,8)===code});
+      if(ok){solved[box.getAttribute("data-ctf")]=1;box.classList.add("solved");msg.textContent="Código correcto. Reto superado.";msg.style.color="var(--olive)";badges()}
+      else{msg.textContent="Ese código no coincide. Revisa que copiaste el comando completo, que el hostname es el de tu servidor (comando hostname) y que escribiste los 8 caracteres.";msg.style.color="var(--alarm)"}
+    };
+  });
+
+  /* ===== listas de practica ===== */
+  [].forEach.call(document.querySelectorAll("[data-check]"),function(box){
+    var cks=box.querySelectorAll("input"),st=box.querySelector(".go-stamp");
+    [].forEach.call(cks,function(c){c.addEventListener("change",function(){
+      c.closest(".chk").classList.toggle("done",c.checked);
+      st.classList.toggle("on",[].every.call(cks,function(x){return x.checked}))})});
+  });
+
+  /* ===== laboratorio de scripts ===== */
+  var LABS={
+    suma:{code:['#!/bin/bash','NOMBRE="Misión Alfa"','TOTAL=0','for i in 1 2 3','do','  TOTAL=$((TOTAL + i))','  echo "Suma parcial: $TOTAL"','done','echo "Hola $NOMBRE, total final: $TOTAL"'],
+      steps:[
+        [0,{},"","Primera línea: indica que el script lo interpreta bash. No ejecuta nada por sí misma."],
+        [1,{NOMBRE:"Misión Alfa"},"","Se crea la variable NOMBRE. Observa: sin espacios alrededor del =."],
+        [2,{NOMBRE:"Misión Alfa",TOTAL:"0"},"","TOTAL arranca en 0. Será el acumulador."],
+        [3,{NOMBRE:"Misión Alfa",TOTAL:"0",i:"1"},"","Empieza el ciclo: i toma el primer valor de la lista, 1."],
+        [5,{NOMBRE:"Misión Alfa",TOTAL:"1",i:"1"},"","$((TOTAL + i)) calcula 0 + 1. El resultado se guarda en TOTAL."],
+        [6,{NOMBRE:"Misión Alfa",TOTAL:"1",i:"1"},"Suma parcial: 1\n","echo imprime el mensaje con el valor actual de TOTAL."],
+        [3,{NOMBRE:"Misión Alfa",TOTAL:"1",i:"2"},"","El ciclo vuelve arriba. Ahora i vale 2."],
+        [5,{NOMBRE:"Misión Alfa",TOTAL:"3",i:"2"},"","1 + 2 = 3."],
+        [6,{NOMBRE:"Misión Alfa",TOTAL:"3",i:"2"},"Suma parcial: 3\n","Segunda salida."],
+        [3,{NOMBRE:"Misión Alfa",TOTAL:"3",i:"3"},"","Último elemento de la lista: i vale 3."],
+        [5,{NOMBRE:"Misión Alfa",TOTAL:"6",i:"3"},"","3 + 3 = 6."],
+        [6,{NOMBRE:"Misión Alfa",TOTAL:"6",i:"3"},"Suma parcial: 6\n","Tercera salida."],
+        [7,{NOMBRE:"Misión Alfa",TOTAL:"6",i:"3"},"","done: ya no quedan elementos, el ciclo termina."],
+        [8,{NOMBRE:"Misión Alfa",TOTAL:"6",i:"3"},"Hola Misión Alfa, total final: 6\n","Última línea: usa las dos variables dentro de las comillas dobles."]
+      ]},
+    existe:{code:['#!/bin/bash','ARCHIVO="$1"','if [ -f "$ARCHIVO" ]','then','  echo "OK: $ARCHIVO existe"','else','  echo "ERROR: no se encontró $ARCHIVO"','  exit 1','fi','echo "Fin del script"'],
+      steps:[
+        [0,{},"","Se ejecuta como: ./revisa.sh /etc/hostname. El argumento queda en $1."],
+        [1,{"$1":"/etc/hostname",ARCHIVO:"/etc/hostname"},"","ARCHIVO guarda el primer argumento."],
+        [2,{"$1":"/etc/hostname",ARCHIVO:"/etc/hostname"},"","La prueba -f pregunta: ¿es un archivo que existe? Respuesta: sí, entra por then."],
+        [4,{"$1":"/etc/hostname",ARCHIVO:"/etc/hostname"},"OK: /etc/hostname existe\n","Se ejecuta el bloque del then. El bloque else se salta completo."],
+        [8,{"$1":"/etc/hostname",ARCHIVO:"/etc/hostname"},"","fi cierra el if."],
+        [9,{"$1":"/etc/hostname",ARCHIVO:"/etc/hostname"},"OK: /etc/hostname existe\nFin del script\n","El script llega al final. Código de salida: 0 (éxito)."]
+      ]},
+    noexiste:{code:['#!/bin/bash','ARCHIVO="$1"','if [ -f "$ARCHIVO" ]','then','  echo "OK: $ARCHIVO existe"','else','  echo "ERROR: no se encontró $ARCHIVO"','  exit 1','fi','echo "Fin del script"'],
+      steps:[
+        [0,{},"","Ahora se ejecuta como: ./revisa.sh /tmp/fantasma.txt"],
+        [1,{"$1":"/tmp/fantasma.txt",ARCHIVO:"/tmp/fantasma.txt"},"","ARCHIVO guarda el argumento."],
+        [2,{"$1":"/tmp/fantasma.txt",ARCHIVO:"/tmp/fantasma.txt"},"","La prueba -f pregunta si es un archivo que existe. Respuesta: no. Salta al else."],
+        [6,{"$1":"/tmp/fantasma.txt",ARCHIVO:"/tmp/fantasma.txt"},"ERROR: no se encontró /tmp/fantasma.txt\n","Se ejecuta el bloque del else."],
+        [7,{"$1":"/tmp/fantasma.txt",ARCHIVO:"/tmp/fantasma.txt","código de salida":"1"},"ERROR: no se encontró /tmp/fantasma.txt\n","exit 1 termina el script aquí, con código 1 (error). Nunca llega a imprimir Fin del script. Quien lo llame, por ejemplo cron, puede detectar el fallo con $?."]
+      ]}
+  };
+  var lab="suma",pos=-1;
+  function labDraw(){
+    var L=LABS[lab],cur=pos>=0?L.steps[pos]:null,html="";
+    L.code.forEach(function(t,i){html+='<div class="ln'+(cur&&cur[0]===i?" on":"")+'"><i>'+(i+1)+'</i><span></span></div>'});
+    $("labCode").innerHTML=html;
+    [].forEach.call($("labCode").querySelectorAll("span"),function(s,i){s.textContent=L.code[i]});
+    var prev=pos>0?L.steps[pos-1][1]:{},vars=cur?cur[1]:{},vh="";
+    Object.keys(vars).forEach(function(k){vh+='<div class="'+(prev[k]!==vars[k]?"chg":"")+'"><b></b><span></span></div>'});
+    $("labVars").innerHTML=vh||'<div><b>Variables</b>(ninguna todavía)</div>';
+    [].forEach.call($("labVars").querySelectorAll("div"),function(d,i){var k=Object.keys(vars)[i];if(k===undefined)return;d.querySelector("b").textContent=k;d.querySelector("span").textContent=vars[k]});
+    $("labOut").textContent=cur?(cur[2]||""):"";
+    $("labNote").textContent=cur?cur[3]:"Pulsa Siguiente línea para ejecutar el script paso a paso.";
+    $("labPos").textContent=(pos+1)+" / "+L.steps.length;
+    $("labPrev").disabled=pos<0;$("labNext").disabled=pos>=L.steps.length-1;
+  }
+  $("labNext").onclick=function(){if(pos<LABS[lab].steps.length-1){pos++;labDraw()}};
+  $("labPrev").onclick=function(){if(pos>-1){pos--;labDraw()}};
+  $("labReset").onclick=function(){pos=-1;labDraw()};
+  [].forEach.call(document.querySelectorAll("#labSel button"),function(b){b.onclick=function(){lab=b.getAttribute("data-l");pos=-1;[].forEach.call(document.querySelectorAll("#labSel button"),function(x){x.classList.toggle("on",x===b)});labDraw()}});
+  labDraw();
+
+  /* ===== detective ===== */
+  function detective(id,cases){
+    var root=$(id),h="";
+    cases.forEach(function(c,i){
+      h+='<div class="sheet"><span class="fig">CASO '+(i+1)+'</span><div class="codebox"></div><p style="font-weight:600"></p><div class="opts"></div><div class="fb"></div></div>';
+    });
+    root.innerHTML=h;
+    [].forEach.call(root.children,function(sh,i){
+      var c=cases[i],cb=sh.querySelector(".codebox"),ops=sh.querySelector(".opts"),fb=sh.querySelector(".fb");
+      c.code.forEach(function(t,j){var d=document.createElement("div");d.className="ln";var n=document.createElement("i");n.textContent=j+1;var s=document.createElement("span");s.textContent=t;d.appendChild(n);d.appendChild(s);cb.appendChild(d)});
+      sh.querySelector("p").textContent=c.q;
+      c.opts.forEach(function(o,k){
+        var b=document.createElement("button");b.className="opt";b.textContent=o;
+        b.onclick=function(){
+          [].forEach.call(ops.children,function(x,m){x.classList.remove("ok","no");if(m===c.ok)x.classList.add("ok")});
+          if(k!==c.ok)b.classList.add("no");
+          fb.textContent=(k===c.ok?"Correcto. ":"Casi. ")+c.why;fb.classList.add("on");
+        };
+        ops.appendChild(b);
+      });
+    });
+  }
+  detective("det1",[
+    {code:['nombre = "Ana"','echo "Hola $nombre"'],q:"El script falla con un mensaje de que nombre no es un comando. ¿Cuál es el problema?",
+     opts:["Falta la primera línea #!/bin/bash","Hay espacios alrededor del signo =","Falta darle permiso de ejecución"],ok:1,
+     why:"En bash, la asignación va sin espacios: nombre=\"Ana\". Con espacios, bash interpreta nombre como un comando y = y \"Ana\" como sus argumentos."},
+    {code:['x=10','if [ $x -gt 5 ]','  echo "grande"','fi'],q:"Bash reporta un error de sintaxis. ¿Qué falta?",
+     opts:["La línea then después de la prueba","La línea else","Cambiar -gt por >"],ok:0,
+     why:"Todo if necesita then antes del bloque de comandos. La estructura completa es if ... then ... fi."},
+    {code:['DIR=""','rm -rf $DIR/*'],q:"El script parece inofensivo. ¿Por qué es peligroso?",
+     opts:["rm no acepta -rf en scripts","Si DIR está vacía, el comando queda como rm -rf /* y borra desde la raíz","Falta usar sudo"],ok:1,
+     why:"Una variable vacía desaparece de la línea. Para protegerte, comprueba antes la variable: [ -n \"$DIR\" ] || exit 1, o usa \"${DIR:?}\" para que el script se detenga si está vacía."},
+    {code:['if [ $USUARIO = "ana" ]','then','  echo "Hola Ana"','fi'],q:"Cuando USUARIO está vacía, la línea del if falla. ¿Cuál es la corrección?",
+     opts:["Poner la variable entre comillas: [ \"$USUARIO\" = \"ana\" ]","Cambiar = por -eq","Quitar los corchetes"],ok:0,
+     why:"Sin comillas, una variable vacía desaparece y la prueba queda incompleta. Con comillas siempre hay un valor, aunque sea una cadena vacía."}
+  ]);
+  detective("det2",[
+    {code:['* * * * * bitacora.sh'],q:"La tarea está programada, pero nunca se ejecuta. ¿Por qué?",
+     opts:["Falta la ruta completa del script","Un asterisco de más","Cron no acepta archivos .sh"],ok:0,
+     why:"Cron no sabe en qué carpeta estás. Debe ser una ruta completa, como /home/ana/bitacora.sh."},
+    {code:['0 9 * * * date +%F > /home/ana/fecha.txt'],q:"La tarea no genera el archivo esperado. ¿Qué pasa?",
+     opts:["El símbolo % tiene un significado especial en crontab","La hora 9 no existe","Falta el usuario"],ok:0,
+     why:"En un crontab, % se interpreta como salto de línea. Hay que escribirlo \\% o, mejor, meter ese comando dentro de un script."},
+    {code:['*/5 * * * * /home/ana/respaldo.sh','# el archivo respaldo.sh no tiene permiso x'],q:"Cada 5 minutos, cron intenta lanzarlo y falla. ¿Qué falta?",
+     opts:["chmod +x /home/ana/respaldo.sh","Reiniciar la máquina","Cambiar */5 por 5"],ok:0,
+     why:"Sin permiso de ejecución, cron no puede lanzar el script (Permission denied). Se corrige con chmod +x."},
+    {code:['60 * * * * /home/ana/bitacora.sh'],q:"crontab no guarda la línea y muestra un error. ¿Por qué?",
+     opts:["El campo del minuto va de 0 a 59","Falta un campo","Debería ser */60"],ok:0,
+     why:"Cada campo tiene su rango. El minuto va de 0 a 59; para una vez por hora a en punto se usa 0 * * * *."}
+  ]);
+
+  /* ===== constructor de cron ===== */
+  var MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"],DIA=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+  function pf(s,min,max,name){
+    var set={},parts=s.split(",");if(!s)return{e:"Campo vacío en "+name+"."};
+    for(var i=0;i<parts.length;i++){
+      var m=parts[i].match(/^(\*|\d+(?:-\d+)?)(?:\/(\d+))?$/);
+      if(!m)return{e:"Valor no válido en "+name+": "+parts[i]};
+      var a,b,st=m[2]?+m[2]:1;if(st<1)return{e:"El paso en "+name+" debe ser 1 o mayor."};
+      if(m[1]==="*"){a=min;b=max}else if(m[1].indexOf("-")>0){var r=m[1].split("-");a=+r[0];b=+r[1]}else{a=+m[1];b=m[2]?max:a}
+      if(a<min||b>max||a>b)return{e:name+" fuera de rango ("+min+"-"+max+"): "+parts[i]};
+      for(var v=a;v<=b;v+=st)set[name==="día de la semana"&&v===7?0:v]=1;
+    }
+    return{s:set};
+  }
+  function two(n){return(n<10?"0":"")+n}
+  function nm(x,arr,off){return x.replace(/\d+/g,function(d){return arr[+d-off]||d})}
+  function describe(f){
+    var m=f[0],h=f[1],dom=f[2],mon=f[3],dow=f[4],num=function(x){return/^\d+$/.test(x)},when;
+    if(m==="*"&&h==="*")when="cada minuto";
+    else if(/^\*\/\d+$/.test(m)&&h==="*")when="cada "+m.slice(2)+" minutos";
+    else if(num(m)&&h==="*")when="al minuto "+m+" de cada hora";
+    else if(num(m)&&num(h))when="a las "+two(+h)+":"+two(+m);
+    else if(num(m))when="al minuto "+m+", en las horas "+h;
+    else when="en los minutos "+m+", en las horas "+h;
+    var p=[];
+    if(dom!=="*")p.push(num(dom)?"el día "+dom+" del mes":"los días "+dom+" del mes");
+    if(mon!=="*")p.push("en "+nm(mon,MES,1).replace(/,/g," y ").replace(/-/g," a "));
+    if(dow!=="*"){var t=dow.replace(/7/g,"0");p.push(/^\d-\d$/.test(t)?"de "+nm(t,DIA,0).replace("-"," a "):"los "+nm(t,DIA,0).replace(/,/g," y ").replace(/(domingo|sábado)/g,"$1s"))}
+    if(!p.length&&num(m)&&num(h))p.push("todos los días");
+    return"Se ejecuta "+when+(p.length?", "+p.join(", "):"")+"."+(dom!=="*"&&dow!=="*"&&dom.charAt(0)!=="*"&&dow.charAt(0)!=="*"?" Cuando se restringen el día del mes y el día de la semana a la vez, basta con que se cumpla uno de los dos.":"");
+  }
+  function cron(){
+    var ids=["f0","f1","f2","f3","f4"],names=["minuto","hora","día del mes","mes","día de la semana"],lim=[[0,59],[0,23],[1,31],[1,12],[0,7]],f=[],sets=[],err=null;
+    ids.forEach(function(id,i){f.push($(id).value.trim().replace(/\s+/g,""))});
+    for(var i=0;i<5;i++){var r=pf(f[i],lim[i][0],lim[i][1],names[i]);if(r.e){err=r.e.charAt(0).toUpperCase()+r.e.slice(1);break}sets.push(r.s)}
+    $("cLine").textContent=f.join(" ")+"  /ruta/completa/script.sh";
+    if(err){$("cText").innerHTML="";var s=document.createElement("span");s.className="bad";s.textContent=err;$("cText").appendChild(s);$("cRuns").innerHTML="";return}
+    $("cText").textContent=describe(f);
+    var domStar=f[2].charAt(0)==="*",dowStar=f[4].charAt(0)==="*",t=new Date();t.setSeconds(0,0);t=t.getTime()+60000;
+    var out=[],lis="";
+    for(var k=0;k<60*24*800&&out.length<5;k++){
+      var d=new Date(t+k*60000);
+      if(!sets[0][d.getMinutes()]||!sets[1][d.getHours()]||!sets[3][d.getMonth()+1])continue;
+      var a=!!sets[2][d.getDate()],b=!!sets[4][d.getDay()];
+      var ok=(domStar||dowStar)?(a&&b):(a||b);
+      if(ok)out.push(d);
+    }
+    $("cRuns").innerHTML="";
+    if(!out.length){var li=document.createElement("li");li.textContent="No hay ejecuciones en los próximos 800 días.";$("cRuns").appendChild(li)}
+    out.forEach(function(d){var li=document.createElement("li");li.textContent=d.toLocaleString("es-PA",{weekday:"long",day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"});$("cRuns").appendChild(li)});
+  }
+  ["f0","f1","f2","f3","f4"].forEach(function(id){$(id).addEventListener("input",cron)});
+  [].forEach.call(document.querySelectorAll("#presets button"),function(b){b.onclick=function(){var v=b.getAttribute("data-p").split(" ");["f0","f1","f2","f3","f4"].forEach(function(id,i){$(id).value=v[i]});cron()}});
+  cron();
+
+  /* ===== franjas de mision en cada paso ===== */
+  var PN={proc:["FASE 1",["Briefing de misión","Manual de a bordo","Radar de procesos","Práctica de vuelo","Checklist y código"]],
+          shell:["FASE 2",["Briefing de misión","Manual de a bordo","Laboratorio de secuencias","Detective de anomalías","Práctica de vuelo","Checklist y código"]],
+          cron:["FASE 3",["Briefing de misión","Manual de a bordo","Reloj de misión","Anomalías conocidas","Práctica de vuelo","Checklist y código"]]};
+  Object.keys(PN).forEach(function(k){
+    [].forEach.call(document.querySelectorAll("#v-"+k+" .pane"),function(p,i){
+      var d=document.createElement("div");d.className="strip";
+      var a=document.createElement("i"),b=document.createElement("b"),c=document.createElement("span"),e=document.createElement("span");
+      b.textContent=PN[k][0];c.textContent=PN[k][1][i];e.textContent="Paso "+(i+1)+" de "+PN[k][1].length;
+      d.appendChild(a);d.appendChild(b);d.appendChild(c);d.appendChild(e);p.insertBefore(d,p.firstChild);
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
